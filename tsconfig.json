@@ -1,0 +1,60 @@
+{
+  "compilerOptions": {
+    // ─── Target ─────────────────────────────────────────────────────────────
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "ES2022"],
+
+    // ─── Module Resolution ───────────────────────────────────────────────────
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+
+    // ─── JSX ────────────────────────────────────────────────────────────────
+    "jsx": "preserve",
+
+    // ─── Strict Mode — ENTERPRISE LEVEL ─────────────────────────────────────
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": false,
+
+    // ─── Build ──────────────────────────────────────────────────────────────
+    "noEmit": true,
+    "skipLibCheck": true,
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+
+    // ─── Path Aliases ────────────────────────────────────────────────────────
+    "baseUrl": ".",
+    "paths": {
+      "@/*":            ["./src/*"],
+      "@systems/*":     ["./src/systems/*"],
+      "@scenes/*":      ["./src/scenes/*"],
+      "@store/*":       ["./src/store/*"],
+      "@hooks/*":       ["./src/hooks/*"],
+      "@config/*":      ["./src/config/*"],
+      "@lib/*":         ["./src/lib/*"],
+      "@types-app/*":   ["./src/types/*"],
+      "@components/*":  ["./src/components/*"],
+      "@styles/*":      ["./src/styles/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}
