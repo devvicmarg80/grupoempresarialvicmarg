@@ -97,7 +97,7 @@ export interface VicmargEventMap {
 type EventHandler<T> = (payload: T) => void
 type UnsubscribeFn = () => void
 
-class TypedEventBus<Events extends Record<string, unknown>> {
+class TypedEventBus<Events extends object> {
   private readonly listeners = new Map<
     keyof Events,
     Set<EventHandler<Events[keyof Events]>>

@@ -45,6 +45,7 @@
       "@hooks/*":       ["./src/hooks/*"],
       "@config/*":      ["./src/config/*"],
       "@lib/*":         ["./src/lib/*"],
+      "@types-app": ["./src/types/index"],
       "@types-app/*":   ["./src/types/*"],
       "@components/*":  ["./src/components/*"],
       "@styles/*":      ["./src/styles/*"]
