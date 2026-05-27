@@ -1,16 +1,34 @@
-// Runtime monitor store — populated by RuntimeMonitor via EventBus subscriptions.
-// Dev-only in practice; collected in production but panel not rendered.
+// Runtime monitor store — populated by RuntimeMonitor + GPUMonitor + HologramEngine.
+// Dev-only panel reads from here. Metrics collected in all builds, panel renders only in dev.
 // ───────────────────────────────────────────────────────────────────────────
 
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import type { SceneId } from '@types-app'
 
+// ─── Exported metric types (used by GPUMonitor, HologramEngine, DevRuntimePanel) ──
+
+export interface GPUInfo {
+  vendor:             string
+  renderer:           string
+  webgl2:             boolean
+  maxTextureSize:     number
+  textureUnits:       number
+  estimatedVRAMTier:  'HIGH' | 'MID' | 'LOW'
+}
+
+export interface HologramMetrics {
+  frameTimeMs: number
+  geometries:  number
+  textures:    number
+  programs:    number
+}
+
 export interface TransitionRecord {
   from:       SceneId
   to:         SceneId
   timestamp:  number
-  durationMs: number | null // null until scene:transition:complete fires
+  durationMs: number | null
 }
 
 export interface FPSDropRecord {
@@ -19,13 +37,24 @@ export interface FPSDropRecord {
   timestamp: number
 }
 
+// ─── Store shape ──────────────────────────────────────────────────────────────
+
 interface MonitorState {
+  // GSAP / ScrollTrigger
   timelineCount:       number
   scrollTriggerCount:  number
+  // Scene lifecycle
   recentTransitions:   TransitionRecord[]
+  // Video
   videoStates:         Record<string, string>
+  // Overlays
   activeOverlayIds:    string[]
+  // Performance
   recentFPSDrops:      FPSDropRecord[]
+  // GPU (populated by GPUMonitor at startup)
+  gpuInfo:             GPUInfo | null
+  // Three.js hologram (populated by HologramEngine while mounted)
+  hologramMetrics:     HologramMetrics | null
 }
 
 interface MonitorActions {
@@ -37,6 +66,8 @@ interface MonitorActions {
   setVideoState:           (sceneId: string, state: string) => void
   setOverlayActive:        (overlayId: string, active: boolean) => void
   logFPSDrop:              (drop: FPSDropRecord) => void
+  setGPUInfo:              (info: GPUInfo) => void
+  setHologramMetrics:      (metrics: HologramMetrics | null) => void
 }
 
 type MonitorStore = MonitorState & MonitorActions
@@ -49,6 +80,8 @@ export const useMonitorStore = create<MonitorStore>()(
     videoStates:        {},
     activeOverlayIds:   [],
     recentFPSDrops:     [],
+    gpuInfo:            null,
+    hologramMetrics:    null,
 
     incrementTimelines: () =>
       set((s) => ({ timelineCount: s.timelineCount + 1 })),
@@ -89,6 +122,12 @@ export const useMonitorStore = create<MonitorStore>()(
 
     logFPSDrop: (drop) =>
       set((s) => ({ recentFPSDrops: [...s.recentFPSDrops.slice(-4), drop] })),
+
+    setGPUInfo: (info) =>
+      set({ gpuInfo: info }),
+
+    setHologramMetrics: (metrics) =>
+      set({ hologramMetrics: metrics }),
   }))
 )
 
@@ -99,3 +138,5 @@ export const selectRecentTransitions  = (s: MonitorStore) => s.recentTransitions
 export const selectVideoStates        = (s: MonitorStore) => s.videoStates
 export const selectActiveOverlayIds   = (s: MonitorStore) => s.activeOverlayIds
 export const selectRecentFPSDrops     = (s: MonitorStore) => s.recentFPSDrops
+export const selectGPUInfo            = (s: MonitorStore) => s.gpuInfo
+export const selectHologramMetrics    = (s: MonitorStore) => s.hologramMetrics

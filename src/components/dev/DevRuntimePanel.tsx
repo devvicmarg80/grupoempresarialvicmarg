@@ -6,6 +6,12 @@ import { useSceneStore }           from '@store/scene.store'
 import { usePerformanceStore }     from '@store/performance.store'
 import { SCENE_SEQUENCE }          from '@config/scenes.config'
 
+const TIER_COLOR: Record<string, string> = {
+  HIGH: '#4ade80',
+  MID:  '#facc15',
+  LOW:  '#f87171',
+}
+
 const IS_DEV = process.env.NODE_ENV === 'development'
 
 // Video state → display color class
@@ -28,6 +34,8 @@ export function DevRuntimePanel() {
   const videoStates        = useMonitorStore((s) => s.videoStates)
   const activeOverlayIds   = useMonitorStore((s) => s.activeOverlayIds)
   const recentFPSDrops     = useMonitorStore((s) => s.recentFPSDrops)
+  const gpuInfo            = useMonitorStore((s) => s.gpuInfo)
+  const hologramMetrics    = useMonitorStore((s) => s.hologramMetrics)
 
   const currentScene   = useSceneStore((s) => s.currentScene)
   const sceneProgress  = useSceneStore((s) => s.sceneProgress)
@@ -167,6 +175,57 @@ export function DevRuntimePanel() {
                   {d.fps}fps (threshold {d.threshold})
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* GPU info */}
+          {gpuInfo && (
+            <div>
+              <p style={{ color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', marginBottom: '4px' }}>GPU</p>
+              <div className="flex items-center justify-between">
+                <span>VRAM tier</span>
+                <span style={{ color: (TIER_COLOR as Record<string, string | undefined>)[gpuInfo.estimatedVRAMTier] ?? '#6b7280' }}>
+                  {gpuInfo.estimatedVRAMTier}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>texSize</span>
+                <span style={{ color: '#60a5fa' }}>{gpuInfo.maxTextureSize}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>WebGL2</span>
+                <span style={{ color: gpuInfo.webgl2 ? '#4ade80' : '#f87171' }}>
+                  {gpuInfo.webgl2 ? 'yes' : 'no'}
+                </span>
+              </div>
+              {gpuInfo.vendor !== 'unknown' && gpuInfo.vendor !== 'unavailable' && (
+                <div style={{ color: 'rgba(255,255,255,0.25)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {gpuInfo.vendor.slice(0, 28)}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Hologram metrics */}
+          {hologramMetrics && (
+            <div>
+              <p style={{ color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', marginBottom: '4px' }}>HOLOGRAM</p>
+              <div className="flex items-center justify-between">
+                <span>frame</span>
+                <span style={{ color: hologramMetrics.frameTimeMs < 20 ? '#4ade80' : hologramMetrics.frameTimeMs < 33 ? '#facc15' : '#f87171' }}>
+                  {hologramMetrics.frameTimeMs}ms
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>geo / tex</span>
+                <span style={{ color: '#60a5fa' }}>
+                  {hologramMetrics.geometries} / {hologramMetrics.textures}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>programs</span>
+                <span style={{ color: '#60a5fa' }}>{hologramMetrics.programs}</span>
+              </div>
             </div>
           )}
         </div>

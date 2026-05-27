@@ -8,6 +8,7 @@ import { ScrollNarrativeSystem } from '@systems/scroll/ScrollNarrativeSystem'
 import { AnimationOrchestrator } from '@systems/animation/AnimationOrchestrator'
 import { OverlaySystem }         from '@systems/overlay/OverlaySystem'
 import { RuntimeMonitor }        from '@systems/monitoring/RuntimeMonitor'
+import { GPUMonitor }            from '@systems/monitoring/GPUMonitor'
 
 /**
  * Boot order (dependency graph):
@@ -24,6 +25,7 @@ import { RuntimeMonitor }        from '@systems/monitoring/RuntimeMonitor'
 export function SystemProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     GSAPRegistry.init()
+    GPUMonitor.init()
     VideoEngine.init()
     SceneManager.init()
     ScrollNarrativeSystem.init()
@@ -38,6 +40,7 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
       ScrollNarrativeSystem.destroy()
       SceneManager.destroy()
       VideoEngine.destroy()
+      GPUMonitor.destroy()
       GSAPRegistry.destroy()
     }
   }, [])
