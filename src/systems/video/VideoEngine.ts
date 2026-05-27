@@ -15,7 +15,8 @@ import type { DeviceTier, MobileVideoStrategy } from '@types-app'
 class VideoEngineClass {
   private readonly videoElements = new Map<string, HTMLVideoElement>()
   private readonly hlsInstances  = new Map<string, Hls>()
-  private initialized = false
+  private initialized      = false
+  private pendingFromScene: string | null = null
   private readonly cleanupFns: Array<() => void> = []
 
   /** Initialize EventBus subscriptions. Call once in SystemProvider. */
@@ -34,7 +35,20 @@ class VideoEngineClass {
       }
     })
 
-    this.cleanupFns.push(unsubDetection, unsubProgress)
+    // Phase 3: respond to SceneManager transitions
+    const unsubTransitionStart = eventBus.on('scene:transition:start', ({ from, to }) => {
+      this.pendingFromScene = from
+      void this.loadScene(to).then(() => void this.play(to))
+    })
+
+    const unsubTransitionComplete = eventBus.on('scene:transition:complete', () => {
+      if (this.pendingFromScene) {
+        this.pause(this.pendingFromScene)
+        this.pendingFromScene = null
+      }
+    })
+
+    this.cleanupFns.push(unsubDetection, unsubProgress, unsubTransitionStart, unsubTransitionComplete)
     this.initialized = true
     eventBus.emit('system:ready', { systemName: 'VideoEngine' })
   }
@@ -57,6 +71,13 @@ class VideoEngineClass {
 
     const el = this.videoElements.get(sceneId)
     if (!el) return
+
+    // Skip HLS recreation if this scene was already preloaded
+    if (this.hlsInstances.has(sceneId)) {
+      useVideoStore.getState().setActiveVideo(sceneId)
+      eventBus.emit('video:loading', { sceneId })
+      return
+    }
 
     const { mobileStrategy } = useVideoStore.getState()
     const { deviceTier }     = usePerformanceStore.getState()
