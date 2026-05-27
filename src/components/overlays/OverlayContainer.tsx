@@ -43,26 +43,36 @@ const MOTION_VARIANTS = {
 } as const
 
 // ─── Position helpers ─────────────────────────────────────────────────────────
+// Returns a plain CSS object applied to a non-motion wrapper div, avoiding the
+// MotionStyle vs CSSProperties type incompatibility with exactOptionalPropertyTypes.
 
-function getPositionStyle(overlay: OverlayInstance): React.CSSProperties {
+interface PositionStyle {
+  position: 'absolute'
+  top?: string
+  bottom?: string
+  left?: string
+  right?: string
+  transform?: string
+}
+
+function getPositionStyle(overlay: OverlayInstance): PositionStyle {
   const { vertical, horizontal, offsetX, offsetY } = overlay.position
+  const pos: PositionStyle = { position: 'absolute' }
 
-  const style: React.CSSProperties = { position: 'absolute' }
+  if (vertical === 'top')    pos.top    = offsetY !== undefined ? `calc(2rem + ${offsetY}px)` : '2rem'
+  if (vertical === 'bottom') pos.bottom = offsetY !== undefined ? `calc(2rem + ${offsetY}px)` : '2rem'
+  if (vertical === 'center') { pos.top = '50%'; pos.transform = 'translateY(-50%)' }
 
-  if (vertical === 'top')    { style.top    = offsetY !== undefined ? `calc(2rem + ${offsetY}px)` : '2rem' }
-  if (vertical === 'bottom') { style.bottom = offsetY !== undefined ? `calc(2rem + ${offsetY}px)` : '2rem' }
-  if (vertical === 'center') { style.top = '50%'; style.transform = 'translateY(-50%)' }
-
-  if (horizontal === 'left')   { style.left  = offsetX !== undefined ? `calc(2rem + ${offsetX}px)` : '2rem' }
-  if (horizontal === 'right')  { style.right = offsetX !== undefined ? `calc(2rem + ${offsetX}px)` : '2rem' }
+  if (horizontal === 'left')   pos.left  = offsetX !== undefined ? `calc(2rem + ${offsetX}px)` : '2rem'
+  if (horizontal === 'right')  pos.right = offsetX !== undefined ? `calc(2rem + ${offsetX}px)` : '2rem'
   if (horizontal === 'center') {
-    style.left = '50%'
-    style.transform = vertical === 'center'
+    pos.left = '50%'
+    pos.transform = vertical === 'center'
       ? 'translate(-50%, -50%)'
-      : `${style.transform ?? ''} translateX(-50%)`.trim()
+      : `${pos.transform ?? ''} translateX(-50%)`.trim()
   }
 
-  return style
+  return pos
 }
 
 // ─── Placeholder overlay card (Phase 3) ──────────────────────────────────────
