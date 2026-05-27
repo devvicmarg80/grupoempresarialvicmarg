@@ -1,13 +1,15 @@
 import { VideoCanvas }      from '@components/canvas/VideoCanvas'
 import { OverlayContainer } from '@components/overlays/OverlayContainer'
+import { DevRuntimePanel }  from '@components/dev/DevRuntimePanel'
 
 /**
  * VICMARG cinematic home page — the full experience lives here.
  *
  * Layer stack (z-index):
- *   z-10  VideoCanvas       — fixed full-screen video background (ARRIVAL → CONVERSION)
- *   z-20  #scroll-narrative — Phase 3 scroll driver + scene FSM trigger
- *   z-40  OverlayContainer  — Framer Motion AnimatePresence glassmorphism overlays
+ *   z-10    VideoCanvas       — fixed full-screen video background (ARRIVAL → CONVERSION)
+ *   z-20    #scroll-narrative — scroll driver → SceneManager FSM triggers
+ *   z-40    OverlayContainer  — Framer Motion glassmorphism overlays (Phase 4)
+ *   z-9999  DevRuntimePanel   — dev-only runtime health HUD (stripped in production)
  */
 export default function HomePage() {
   return (
@@ -24,8 +26,11 @@ export default function HomePage() {
         <div id="scroll-content" style={{ height: '400vh' }} aria-hidden="true" />
       </div>
 
-      {/* Layer 2: Overlay system — glassmorphism panels, animated with Framer Motion */}
+      {/* Layer 2: Overlay system — glassmorphism panels, Framer Motion enter/exit */}
       <OverlayContainer />
+
+      {/* Dev only — stripped by Next.js in production via process.env.NODE_ENV check */}
+      {process.env.NODE_ENV === 'development' && <DevRuntimePanel />}
     </>
   )
 }

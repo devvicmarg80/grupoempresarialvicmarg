@@ -47,7 +47,8 @@ class AnimationOrchestratorClass {
     eventBus.emit('system:destroyed', { systemName: 'AnimationOrchestrator' })
   }
 
-  get isReady(): boolean { return this.initialized }
+  get isReady(): boolean          { return this.initialized }
+  get activeContextCount(): number { return this.contexts.size }
 
   // ─── Private ──────────────────────────────────────────────────────────────
 

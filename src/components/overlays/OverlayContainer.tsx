@@ -1,8 +1,12 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion }  from 'framer-motion'
 import { useOverlayStore, selectActiveOverlays } from '@store/overlay.store'
-import { Materials } from '@config/design-tokens'
+import { Materials }                from '@config/design-tokens'
+import { ReceptionistCapture }      from './ReceptionistCapture'
+import { ServicesHologram }         from './ServicesHologram'
+import { EcosystemExplorer }        from './EcosystemExplorer'
+import { PremiumCTA }               from './PremiumCTA'
 import type { GlassMaterialVariant, OverlayInstance } from '@types-app'
 
 // ─── Glass styles keyed by material variant ───────────────────────────────────
@@ -43,15 +47,15 @@ const MOTION_VARIANTS = {
 } as const
 
 // ─── Position helpers ─────────────────────────────────────────────────────────
-// Returns a plain CSS object applied to a non-motion wrapper div, avoiding the
-// MotionStyle vs CSSProperties type incompatibility with exactOptionalPropertyTypes.
+// PositionStyle uses only the CSS props we write — avoids CSSProperties' x?: T|undefined
+// incompatibility with Framer Motion's MotionStyle under exactOptionalPropertyTypes.
 
 interface PositionStyle {
   position: 'absolute'
-  top?: string
-  bottom?: string
-  left?: string
-  right?: string
+  top?:     string
+  bottom?:  string
+  left?:    string
+  right?:   string
   transform?: string
 }
 
@@ -75,13 +79,9 @@ function getPositionStyle(overlay: OverlayInstance): PositionStyle {
   return pos
 }
 
-// ─── Placeholder overlay card (Phase 3) ──────────────────────────────────────
-// Phase 4 replaces this with real overlay components (ReceptionistCapture, etc.)
+// ─── Fallback placeholder for unknown overlay IDs ─────────────────────────────
 
-function OverlayCard({ overlay, onDismiss }: {
-  overlay:   OverlayInstance
-  onDismiss: () => void
-}) {
+function OverlayFallback({ overlay, onDismiss }: { overlay: OverlayInstance; onDismiss: () => void }) {
   return (
     <div
       className="relative rounded-xl p-6 min-w-[280px] max-w-sm text-white"
@@ -89,20 +89,30 @@ function OverlayCard({ overlay, onDismiss }: {
     >
       {overlay.dismissible && (
         <button
+          type="button"
           className="absolute top-3 right-4 text-white/40 hover:text-white/80 transition-colors text-xl leading-none"
           onClick={onDismiss}
           aria-label="Cerrar"
-          type="button"
         >
           ×
         </button>
       )}
-      <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-1 font-mono">
-        {overlay.sceneId}
-      </p>
+      <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-1 font-mono">{overlay.sceneId}</p>
       <p className="text-sm font-light text-white/60 font-mono">{overlay.id}</p>
     </div>
   )
+}
+
+// ─── Overlay router — maps overlay ID to real Phase 4 component ───────────────
+
+function renderOverlayContent(overlay: OverlayInstance, onDismiss: () => void): React.ReactNode {
+  switch (overlay.id) {
+    case 'receptionist-name-capture': return <ReceptionistCapture overlay={overlay} onDismiss={onDismiss} />
+    case 'services-hologram-menu':    return <ServicesHologram    overlay={overlay} onDismiss={onDismiss} />
+    case 'ecosystem-explorer':        return <EcosystemExplorer   overlay={overlay} onDismiss={onDismiss} />
+    case 'premium-cta':               return <PremiumCTA          overlay={overlay} onDismiss={onDismiss} />
+    default:                          return <OverlayFallback     overlay={overlay} onDismiss={onDismiss} />
+  }
 }
 
 // ─── Container ───────────────────────────────────────────────────────────────
@@ -129,10 +139,7 @@ export function OverlayContainer() {
             exit="exit"
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <OverlayCard
-              overlay={overlay}
-              onDismiss={() => { closeOverlay(overlay.id) }}
-            />
+            {renderOverlayContent(overlay, () => { closeOverlay(overlay.id) })}
           </motion.div>
         ))}
       </AnimatePresence>
