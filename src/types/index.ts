@@ -12,7 +12,6 @@ export type {
   SceneActions,
   SceneTransitionPayload,
   FSMTransitionResult,
-  SCENE_ORDER,
 } from './scene.types'
 
 export { SCENE_ORDER } from './scene.types'
