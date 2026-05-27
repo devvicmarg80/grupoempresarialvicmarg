@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Easing CSS variables — mirrors animation.config.ts */
+    --ease-cinematic: cubic-bezier(0.76, 0, 0.24, 1);
+    --ease-entry:     cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-exit:      cubic-bezier(0.4, 0, 1, 1);
+    --ease-organic:   cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  html {
+    height: 100%;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* GSAP ScrollTrigger controls scroll — disable browser-native smooth scroll */
+    scroll-behavior: auto;
+    overflow: hidden;
+  }
+
+  body {
+    height: 100%;
+    min-height: 100dvh;
+    background-color: #0d0d1f; /* onyx.primary */
+    color: #ffffff;
+    font-family: var(--font-display), system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  ::selection {
+    background-color: rgba(37, 99, 235, 0.35);
+    color: #ffffff;
+  }
+}
+
+/* Scroll narrative container — hide scrollbar, preserve scroll functionality */
+#scroll-narrative {
+  scrollbar-width: none;
+}
+#scroll-narrative::-webkit-scrollbar {
+  display: none;
+}
