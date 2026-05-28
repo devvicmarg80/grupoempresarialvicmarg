@@ -41,47 +41,58 @@ export interface FPSDropRecord {
 
 interface MonitorState {
   // GSAP / ScrollTrigger
-  timelineCount:       number
-  scrollTriggerCount:  number
+  timelineCount:            number
+  scrollTriggerCount:       number
   // Scene lifecycle
-  recentTransitions:   TransitionRecord[]
+  recentTransitions:        TransitionRecord[]
   // Video
-  videoStates:         Record<string, string>
+  videoStates:              Record<string, string>
   // Overlays
-  activeOverlayIds:    string[]
+  activeOverlayIds:         string[]
   // Performance
-  recentFPSDrops:      FPSDropRecord[]
+  recentFPSDrops:           FPSDropRecord[]
+  droppedFrames:            number
+  memoryUsageMB:            number | null
+  lastTransitionLatencyMs:  number | null
+  transitionStartedAt:      number | null
   // GPU (populated by GPUMonitor at startup)
-  gpuInfo:             GPUInfo | null
+  gpuInfo:                  GPUInfo | null
   // Three.js hologram (populated by HologramEngine while mounted)
-  hologramMetrics:     HologramMetrics | null
+  hologramMetrics:          HologramMetrics | null
 }
 
 interface MonitorActions {
-  incrementTimelines:      () => void
-  decrementTimelines:      () => void
-  setScrollTriggerCount:   (n: number) => void
-  logTransitionStart:      (from: SceneId, to: SceneId) => void
-  logTransitionComplete:   (to: SceneId, durationMs: number) => void
-  setVideoState:           (sceneId: string, state: string) => void
-  setOverlayActive:        (overlayId: string, active: boolean) => void
-  logFPSDrop:              (drop: FPSDropRecord) => void
-  setGPUInfo:              (info: GPUInfo) => void
-  setHologramMetrics:      (metrics: HologramMetrics | null) => void
+  incrementTimelines:          () => void
+  decrementTimelines:          () => void
+  setScrollTriggerCount:       (n: number) => void
+  logTransitionStart:          (from: SceneId, to: SceneId) => void
+  logTransitionComplete:       (to: SceneId, durationMs: number) => void
+  setVideoState:               (sceneId: string, state: string) => void
+  setOverlayActive:            (overlayId: string, active: boolean) => void
+  logFPSDrop:                  (drop: FPSDropRecord) => void
+  setGPUInfo:                  (info: GPUInfo) => void
+  setHologramMetrics:          (metrics: HologramMetrics | null) => void
+  incrementDroppedFrames:      () => void
+  setMemoryUsage:              (mb: number | null) => void
+  setLastTransitionLatency:    (ms: number) => void
 }
 
 type MonitorStore = MonitorState & MonitorActions
 
 export const useMonitorStore = create<MonitorStore>()(
   subscribeWithSelector((set, get) => ({
-    timelineCount:      0,
-    scrollTriggerCount: 0,
-    recentTransitions:  [],
-    videoStates:        {},
-    activeOverlayIds:   [],
-    recentFPSDrops:     [],
-    gpuInfo:            null,
-    hologramMetrics:    null,
+    timelineCount:           0,
+    scrollTriggerCount:      0,
+    recentTransitions:       [],
+    videoStates:             {},
+    activeOverlayIds:        [],
+    recentFPSDrops:          [],
+    droppedFrames:           0,
+    memoryUsageMB:           null,
+    lastTransitionLatencyMs: null,
+    transitionStartedAt:     null,
+    gpuInfo:                 null,
+    hologramMetrics:         null,
 
     incrementTimelines: () =>
       set((s) => ({ timelineCount: s.timelineCount + 1 })),
@@ -94,6 +105,7 @@ export const useMonitorStore = create<MonitorStore>()(
 
     logTransitionStart: (from, to) =>
       set((s) => ({
+        transitionStartedAt: Date.now(),
         recentTransitions: [
           ...s.recentTransitions.slice(-4),
           { from, to, timestamp: Date.now(), durationMs: null },
@@ -101,10 +113,15 @@ export const useMonitorStore = create<MonitorStore>()(
       })),
 
     logTransitionComplete: (to, durationMs) => {
-      const transitions = get().recentTransitions
-      const lastIdx = transitions.length - 1
+      const { recentTransitions, transitionStartedAt } = get()
+      const lastIdx = recentTransitions.length - 1
+      const actualLatencyMs = transitionStartedAt !== null
+        ? Date.now() - transitionStartedAt
+        : null
       set({
-        recentTransitions: transitions.map((t, i) =>
+        transitionStartedAt:     null,
+        lastTransitionLatencyMs: actualLatencyMs,
+        recentTransitions: recentTransitions.map((t, i) =>
           i === lastIdx && t.to === to ? { ...t, durationMs } : t
         ),
       })
@@ -128,15 +145,27 @@ export const useMonitorStore = create<MonitorStore>()(
 
     setHologramMetrics: (metrics) =>
       set({ hologramMetrics: metrics }),
+
+    incrementDroppedFrames: () =>
+      set((s) => ({ droppedFrames: s.droppedFrames + 1 })),
+
+    setMemoryUsage: (mb) =>
+      set({ memoryUsageMB: mb }),
+
+    setLastTransitionLatency: (ms) =>
+      set({ lastTransitionLatencyMs: ms }),
   }))
 )
 
 // ─── Selectors ─────────────────────────────────────────────────────────────
-export const selectTimelineCount      = (s: MonitorStore) => s.timelineCount
-export const selectScrollTriggerCount = (s: MonitorStore) => s.scrollTriggerCount
-export const selectRecentTransitions  = (s: MonitorStore) => s.recentTransitions
-export const selectVideoStates        = (s: MonitorStore) => s.videoStates
-export const selectActiveOverlayIds   = (s: MonitorStore) => s.activeOverlayIds
-export const selectRecentFPSDrops     = (s: MonitorStore) => s.recentFPSDrops
-export const selectGPUInfo            = (s: MonitorStore) => s.gpuInfo
-export const selectHologramMetrics    = (s: MonitorStore) => s.hologramMetrics
+export const selectTimelineCount           = (s: MonitorStore) => s.timelineCount
+export const selectScrollTriggerCount      = (s: MonitorStore) => s.scrollTriggerCount
+export const selectRecentTransitions       = (s: MonitorStore) => s.recentTransitions
+export const selectVideoStates             = (s: MonitorStore) => s.videoStates
+export const selectActiveOverlayIds        = (s: MonitorStore) => s.activeOverlayIds
+export const selectRecentFPSDrops          = (s: MonitorStore) => s.recentFPSDrops
+export const selectGPUInfo                 = (s: MonitorStore) => s.gpuInfo
+export const selectHologramMetrics         = (s: MonitorStore) => s.hologramMetrics
+export const selectDroppedFrames           = (s: MonitorStore) => s.droppedFrames
+export const selectMemoryUsageMB           = (s: MonitorStore) => s.memoryUsageMB
+export const selectLastTransitionLatencyMs = (s: MonitorStore) => s.lastTransitionLatencyMs

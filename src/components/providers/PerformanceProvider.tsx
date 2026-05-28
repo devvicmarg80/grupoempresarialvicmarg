@@ -5,6 +5,7 @@ import { deviceCapabilityDetector } from '@systems/performance/DeviceCapabilityD
 import { usePerformanceStore } from '@store/performance.store'
 import { useOverlayStore } from '@store/overlay.store'
 import { eventBus } from '@lib/event-bus'
+import { useMonitorStore }              from '@store/monitor.store'
 import { TIER_BUDGETS, FPS_THRESHOLDS } from '@config/performance.config'
 
 /**
@@ -21,11 +22,19 @@ export function PerformanceProvider({ children }: { children: React.ReactNode })
     })
 
     // FPS monitor — 2-second rolling samples, triggers tier demotion on degradation
-    let frames   = 0
-    let lastTime = performance.now()
-    let rafId:   number
+    let frames        = 0
+    let lastTime      = performance.now()
+    let lastFrameTime = performance.now()
+    let rafId:        number
 
     const measureFPS = (time: number) => {
+      // Per-frame dropped frame detection: > 50ms = missed deadline
+      const frameTime = time - lastFrameTime
+      lastFrameTime   = time
+      if (frameTime > 50) {
+        useMonitorStore.getState().incrementDroppedFrames()
+      }
+
       frames++
       const delta = time - lastTime
 

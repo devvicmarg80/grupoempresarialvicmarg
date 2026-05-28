@@ -8,8 +8,9 @@ import { eventBus }        from '@lib/event-bus'
 import { useMonitorStore } from '@store/monitor.store'
 
 class RuntimeMonitorClass {
-  private pollInterval: ReturnType<typeof setInterval> | null = null
-  private initialized  = false
+  private pollInterval:  ReturnType<typeof setInterval> | null = null
+  private memInterval:   ReturnType<typeof setInterval> | null = null
+  private initialized    = false
   private readonly cleanupFns: Array<() => void> = []
 
   init(): void {
@@ -56,6 +57,17 @@ class RuntimeMonitorClass {
       }
     }, 2000)
 
+    // ── JS heap memory poll (Chrome only — undefined in Safari/Firefox) ──────
+    this.memInterval = setInterval(() => {
+      const mem = (performance as unknown as Record<string, unknown>).memory as
+        | { usedJSHeapSize: number; jsHeapSizeLimit: number }
+        | undefined
+      if (mem) {
+        const usedMB = Math.round(mem.usedJSHeapSize / (1024 * 1024))
+        useMonitorStore.getState().setMemoryUsage(usedMB)
+      }
+    }, 5000)
+
     this.cleanupFns.push(
       unsubCtxStart, unsubCtxKilled,
       unsubTransStart, unsubTransComplete,
@@ -70,10 +82,8 @@ class RuntimeMonitorClass {
 
   destroy(): void {
     if (!this.initialized) return
-    if (this.pollInterval !== null) {
-      clearInterval(this.pollInterval)
-      this.pollInterval = null
-    }
+    if (this.pollInterval !== null) { clearInterval(this.pollInterval); this.pollInterval = null }
+    if (this.memInterval  !== null) { clearInterval(this.memInterval);  this.memInterval  = null }
     this.cleanupFns.forEach((fn) => fn())
     this.cleanupFns.length = 0
     this.initialized = false

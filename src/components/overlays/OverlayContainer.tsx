@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, motion }  from 'framer-motion'
+import { AnimatePresence, motion, type Variants } from 'framer-motion'
 import { useOverlayStore, selectActiveOverlays } from '@store/overlay.store'
 import { Materials }                from '@config/design-tokens'
 import { ReceptionistCapture }      from './ReceptionistCapture'
@@ -39,12 +39,20 @@ const GLASS_STYLES: Record<GlassMaterialVariant, React.CSSProperties> = {
 }
 
 // ─── Framer Motion variants ───────────────────────────────────────────────────
+// Entry: expo.out spring feel — overlay emerges with authority.
+// Exit: fast ease-in — clean, decisive, no linger.
 
-const MOTION_VARIANTS = {
-  hidden:  { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0  },
-  exit:    { opacity: 0, y: -12 },
-} as const
+const MOTION_VARIANTS: Variants = {
+  hidden:  { opacity: 0, y: 20, scale: 0.97 },
+  visible: {
+    opacity: 1, y: 0, scale: 1,
+    transition: { duration: 0.52, ease: [0.16, 1, 0.3, 1] },
+  },
+  exit: {
+    opacity: 0, y: -10, scale: 0.99,
+    transition: { duration: 0.20, ease: [0.4, 0, 1, 1] },
+  },
+}
 
 // ─── Position helpers ─────────────────────────────────────────────────────────
 // PositionStyle uses only the CSS props we write — avoids CSSProperties' x?: T|undefined
@@ -137,7 +145,6 @@ export function OverlayContainer() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
             {renderOverlayContent(overlay, () => { closeOverlay(overlay.id) })}
           </motion.div>

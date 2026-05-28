@@ -36,6 +36,9 @@ export function DevRuntimePanel() {
   const recentFPSDrops     = useMonitorStore((s) => s.recentFPSDrops)
   const gpuInfo            = useMonitorStore((s) => s.gpuInfo)
   const hologramMetrics    = useMonitorStore((s) => s.hologramMetrics)
+  const memoryUsageMB      = useMonitorStore((s) => s.memoryUsageMB)
+  const droppedFrames      = useMonitorStore((s) => s.droppedFrames)
+  const lastLatencyMs      = useMonitorStore((s) => s.lastTransitionLatencyMs)
 
   const currentScene   = useSceneStore((s) => s.currentScene)
   const sceneProgress  = useSceneStore((s) => s.sceneProgress)
@@ -228,6 +231,33 @@ export function DevRuntimePanel() {
               </div>
             </div>
           )}
+
+          {/* Memory + dropped frames */}
+          <div>
+            <p style={{ color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', marginBottom: '4px' }}>STABILITY</p>
+            {memoryUsageMB !== null && (
+              <div className="flex items-center justify-between">
+                <span>JS heap</span>
+                <span style={{ color: memoryUsageMB > 300 ? '#f87171' : memoryUsageMB > 150 ? '#facc15' : '#4ade80' }}>
+                  {memoryUsageMB}MB
+                </span>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <span>dropped</span>
+              <span style={{ color: droppedFrames > 20 ? '#f87171' : droppedFrames > 5 ? '#facc15' : '#6b7280' }}>
+                {droppedFrames}
+              </span>
+            </div>
+            {lastLatencyMs !== null && (
+              <div className="flex items-center justify-between">
+                <span>t-latency</span>
+                <span style={{ color: lastLatencyMs > 1200 ? '#f87171' : lastLatencyMs > 950 ? '#facc15' : '#4ade80' }}>
+                  {lastLatencyMs}ms
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

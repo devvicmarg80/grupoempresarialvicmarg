@@ -15,11 +15,15 @@ import {
   LineBasicMaterial,
   Mesh,
   MeshPhysicalMaterial,
-  AmbientLight,
   PointLight,
   DirectionalLight,
+  HemisphereLight,
   Object3D,
   Material,
+  BufferGeometry,
+  Float32BufferAttribute,
+  Points,
+  PointsMaterial,
   type ColorRepresentation,
 } from 'three'
 import { eventBus }        from '@lib/event-bus'
@@ -36,6 +40,18 @@ class HologramEngineClass {
   private lastFrameTimeMs = 0
   private frameStart      = 0
   private mounted         = false
+
+  // Per-frame animated objects
+  private coreMat:      MeshPhysicalMaterial | null = null
+  private innerCore:    Mesh | null = null
+  private innerCoreMat: MeshPhysicalMaterial | null = null
+  private outerCage:    LineSegments | null = null
+  private particles:    Points | null = null
+
+  // Lerp-smoothed rotation — organic cinematic inertia
+  private rotY = 0
+  private rotX = 0
+
   private readonly cleanupFns: Array<() => void> = []
 
   // ─── Public API ───────────────────────────────────────────────────────────
@@ -44,6 +60,8 @@ class HologramEngineClass {
     if (this.mounted) this.unmount()  // Guard against double-mount
 
     this.container = container
+    this.rotY = 0
+    this.rotX = 0
     this.buildScene(container)
     this.buildHologram()
     this.startRenderLoop()
@@ -104,18 +122,20 @@ class HologramEngineClass {
       () => canvas.removeEventListener('webglcontextrestored', onContextRestored),
     )
 
-    // Scene + camera
+    // Scene + camera — slight upward offset for better hologram framing
     this.scene  = new Scene()
-    this.camera = new PerspectiveCamera(55, w / h, 0.1, 50)
-    this.camera.position.set(0, 0, 4.5)
+    this.camera = new PerspectiveCamera(52, w / h, 0.1, 50)
+    this.camera.position.set(0, 0.25, 5.2)
 
-    // Minimal lighting — no complex HDRI
-    const ambient = new AmbientLight(0x1e3a8a as ColorRepresentation, 0.6)
-    const point   = new PointLight(0x3b82f6 as ColorRepresentation, 2.5, 12)
-    const dir     = new DirectionalLight(0xdbeafe as ColorRepresentation, 0.4)
-    point.position.set(3, 3, 2)
-    dir.position.set(-2, 3, 3)
-    this.scene.add(ambient, point, dir)
+    // Cinematic 4-light rig: hemisphere + key + fill + rim
+    const hemi  = new HemisphereLight(0x1e40af as ColorRepresentation, 0x050510 as ColorRepresentation, 0.55)
+    const key   = new PointLight(0x3b82f6 as ColorRepresentation, 3.2, 14)
+    const fill  = new PointLight(0x60a5fa as ColorRepresentation, 1.4, 10)
+    const rim   = new DirectionalLight(0xdbeafe as ColorRepresentation, 0.45)
+    key.position.set( 3,    3,  2)
+    fill.position.set(-2.5, -1, 3)
+    rim.position.set( -2,   4,  3)
+    this.scene.add(hemi, key, fill, rim)
 
     // Resize handler
     const onResize = (): void => {
@@ -136,32 +156,82 @@ class HologramEngineClass {
 
     this.hologram = new Group()
 
-    // Solid icosahedron — cobalt with physical material
-    const geo = new IcosahedronGeometry(1.2, 2)
-    const mat = new MeshPhysicalMaterial({
-      color:             0x1e40af as ColorRepresentation,
+    // Core icosahedron — cobalt, high-detail mesh
+    const coreGeo  = new IcosahedronGeometry(1.0, 3)
+    this.coreMat   = new MeshPhysicalMaterial({
+      color:             0x1a3a9a as ColorRepresentation,
       emissive:          0x1e3a8a as ColorRepresentation,
       emissiveIntensity: 0.55,
-      metalness:         0.75,
-      roughness:         0.15,
+      metalness:         0.82,
+      roughness:         0.10,
       transparent:       true,
-      opacity:           0.72,
+      opacity:           0.66,
     })
-    const mesh = new Mesh(geo, mat)
-    this.hologram.add(mesh)
+    this.hologram.add(new Mesh(coreGeo, this.coreMat))
 
-    // Wireframe overlay — cobalt-light, barely-there lines
-    const wGeo = new WireframeGeometry(geo)
+    // Inner glowing core — brighter emissive, counter-rotates
+    const innerGeo    = new IcosahedronGeometry(0.50, 2)
+    this.innerCoreMat = new MeshPhysicalMaterial({
+      color:             0x2563eb as ColorRepresentation,
+      emissive:          0x60a5fa as ColorRepresentation,
+      emissiveIntensity: 1.25,
+      metalness:         0.5,
+      roughness:         0.05,
+      transparent:       true,
+      opacity:           0.38,
+    })
+    this.innerCore = new Mesh(innerGeo, this.innerCoreMat)
+    this.hologram.add(this.innerCore)
+
+    // Primary wireframe lattice — tight cobalt lines
+    const wGeo = new WireframeGeometry(coreGeo)
     const wMat = new LineBasicMaterial({
       color:       0x60a5fa as ColorRepresentation,
-      opacity:     0.28,
+      opacity:     0.22,
       transparent: true,
     })
     const wire = new LineSegments(wGeo, wMat)
-    wire.scale.setScalar(1.008)  // Avoids z-fighting with the solid mesh
+    wire.scale.setScalar(1.005)
     this.hologram.add(wire)
 
+    // Outer sparse cage — slower counter-rotation adds depth perception
+    const outerGeo  = new WireframeGeometry(new IcosahedronGeometry(1.72, 1))
+    const outerMat  = new LineBasicMaterial({
+      color:       0x3b82f6 as ColorRepresentation,
+      opacity:     0.09,
+      transparent: true,
+    })
+    this.outerCage = new LineSegments(outerGeo, outerMat)
+    this.hologram.add(this.outerCage)
+
+    // Floating particle cloud
+    this.buildParticles()
+
     this.scene.add(this.hologram)
+  }
+
+  private buildParticles(): void {
+    const count     = 60
+    const positions = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      const theta = Math.random() * Math.PI * 2
+      const phi   = Math.acos(2 * Math.random() - 1)
+      const r     = 1.55 + Math.random() * 0.80
+      positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta)
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
+      positions[i * 3 + 2] = r * Math.cos(phi)
+    }
+    const geo = new BufferGeometry()
+    geo.setAttribute('position', new Float32BufferAttribute(positions, 3))
+    const mat = new PointsMaterial({
+      color:           0x93c5fd as ColorRepresentation,
+      size:            0.022,
+      transparent:     true,
+      opacity:         0.48,
+      sizeAttenuation: true,
+    })
+    this.particles = new Points(geo, mat)
+    this.hologram?.add(this.particles)
   }
 
   // ─── Render loop ──────────────────────────────────────────────────────────
@@ -194,11 +264,42 @@ class HologramEngineClass {
 
   private animateHologram(ts: number): void {
     if (!this.hologram) return
-    const t = ts * 0.001  // seconds
+    const t = ts * 0.001
 
-    this.hologram.rotation.y = t * 0.28
-    this.hologram.rotation.x = Math.sin(t * 0.18) * 0.14
-    this.hologram.position.y = Math.sin(t * 0.65) * 0.09
+    // Lerp rotation towards target — organic cinematic inertia
+    const tRotY = t * 0.22
+    const tRotX = Math.sin(t * 0.14) * 0.12
+    this.rotY  += (tRotY - this.rotY) * 0.06
+    this.rotX  += (tRotX - this.rotX) * 0.04
+
+    this.hologram.rotation.y = this.rotY
+    this.hologram.rotation.x = this.rotX
+    this.hologram.position.y = Math.sin(t * 0.52) * 0.09
+    this.hologram.scale.setScalar(1 + Math.sin(t * 0.65) * 0.018)
+
+    if (this.outerCage) {
+      this.outerCage.rotation.y = -t * 0.11
+      this.outerCage.rotation.z =  t * 0.055
+    }
+
+    if (this.innerCore) {
+      this.innerCore.rotation.y = -t * 0.48
+      this.innerCore.rotation.z =  Math.sin(t * 0.22) * 0.18
+    }
+
+    if (this.coreMat) {
+      this.coreMat.emissiveIntensity = 0.48 + Math.sin(t * 1.08) * 0.18
+    }
+
+    if (this.innerCoreMat) {
+      this.innerCoreMat.emissiveIntensity = 1.05 + Math.sin(t * 1.72) * 0.35
+      this.innerCoreMat.opacity           = 0.36 + Math.sin(t * 0.88) * 0.08
+    }
+
+    if (this.particles) {
+      this.particles.rotation.y = t * 0.055
+      this.particles.rotation.x = Math.sin(t * 0.07) * 0.04
+    }
   }
 
   // ─── Metrics polling ──────────────────────────────────────────────────────
@@ -246,7 +347,7 @@ class HologramEngineClass {
 
   private disposeAll(): void {
     this.scene?.traverse((object: Object3D) => {
-      if (object instanceof Mesh || object instanceof LineSegments) {
+      if (object instanceof Mesh || object instanceof LineSegments || object instanceof Points) {
         object.geometry.dispose()
         const mat = object.material as Material | Material[]
         if (Array.isArray(mat)) {
@@ -265,11 +366,16 @@ class HologramEngineClass {
       this.renderer.dispose()
     }
 
-    this.renderer  = null
-    this.scene     = null
-    this.camera    = null
-    this.hologram  = null
-    this.container = null
+    this.renderer     = null
+    this.scene        = null
+    this.camera       = null
+    this.hologram     = null
+    this.coreMat      = null
+    this.innerCore    = null
+    this.innerCoreMat = null
+    this.outerCage    = null
+    this.particles    = null
+    this.container    = null
   }
 }
 
