@@ -49,13 +49,13 @@ export class OpenAITTSProvider implements TTSProvider {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ text, voice: 'alloy' }),
-        signal:  options?.signal,
+        ...(options?.signal ? { signal: options.signal } : {}),
       })
 
       if (!res.ok) throw new Error(`TTS failed: ${res.status}`)
 
-      const blob = await res.blob()
-      const url  = URL.createObjectURL(blob)
+      const blob  = await res.blob()
+      const url   = URL.createObjectURL(blob)
       const audio = new Audio(url)
       this.currentAudio = audio
 
@@ -108,7 +108,7 @@ export class ElevenLabsTTSProvider implements TTSProvider {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ text, provider: 'elevenlabs', voiceId: this.voiceId }),
-        signal:  options?.signal,
+        ...(options?.signal ? { signal: options.signal } : {}),
       })
 
       if (!res.ok) throw new Error(`ElevenLabs TTS failed: ${res.status}`)
