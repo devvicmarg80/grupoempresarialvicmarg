@@ -7,6 +7,7 @@ import { ReceptionistCapture }      from './ReceptionistCapture'
 import { ServicesHologram }         from './ServicesHologram'
 import { EcosystemExplorer }        from './EcosystemExplorer'
 import { PremiumCTA }               from './PremiumCTA'
+import { AIReceptionistOverlay }    from '@components/ai/AIReceptionistOverlay'
 import type { GlassMaterialVariant, OverlayInstance } from '@types-app'
 
 // ─── Glass styles keyed by material variant ───────────────────────────────────
@@ -115,11 +116,12 @@ function OverlayFallback({ overlay, onDismiss }: { overlay: OverlayInstance; onD
 
 function renderOverlayContent(overlay: OverlayInstance, onDismiss: () => void): React.ReactNode {
   switch (overlay.id) {
-    case 'receptionist-name-capture': return <ReceptionistCapture overlay={overlay} onDismiss={onDismiss} />
-    case 'services-hologram-menu':    return <ServicesHologram    overlay={overlay} onDismiss={onDismiss} />
-    case 'ecosystem-explorer':        return <EcosystemExplorer   overlay={overlay} onDismiss={onDismiss} />
-    case 'premium-cta':               return <PremiumCTA          overlay={overlay} onDismiss={onDismiss} />
-    default:                          return <OverlayFallback     overlay={overlay} onDismiss={onDismiss} />
+    case 'ai-receptionist':           return <AIReceptionistOverlay overlay={overlay} onDismiss={onDismiss} />
+    case 'receptionist-name-capture': return <ReceptionistCapture  overlay={overlay} onDismiss={onDismiss} />
+    case 'services-hologram-menu':    return <ServicesHologram     overlay={overlay} onDismiss={onDismiss} />
+    case 'ecosystem-explorer':        return <EcosystemExplorer    overlay={overlay} onDismiss={onDismiss} />
+    case 'premium-cta':               return <PremiumCTA           overlay={overlay} onDismiss={onDismiss} />
+    default:                          return <OverlayFallback      overlay={overlay} onDismiss={onDismiss} />
   }
 }
 

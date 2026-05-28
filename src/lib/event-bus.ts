@@ -20,6 +20,17 @@ import type {
   GlassLevel,
 } from '@types-app'
 
+// ─── AI Conversation State ────────────────────────────────────────────────────
+export type AIConversationState =
+  | 'idle'         // Session not started
+  | 'initializing' // Acquiring token + connecting
+  | 'ready'        // Connected, waiting for user
+  | 'listening'    // User is speaking (VAD active)
+  | 'thinking'     // LLM processing
+  | 'speaking'     // AI is outputting audio
+  | 'error'        // Recoverable error
+  | 'ended'        // Session ended
+
 // ─── Typed Event Map ─────────────────────────────────────────────────────────
 export interface VicmargEventMap {
   // ── Scene Events ──────────────────────────────────────────────────────────
@@ -79,12 +90,21 @@ export interface VicmargEventMap {
   'user:session:started':         { userId: string }
   'user:session:ended':           Record<string, never>
 
-  // ── AI Events (Future — OpenAI Realtime + ElevenLabs) ────────────────────
+  // ── AI Events ─────────────────────────────────────────────────────────────
   'ai:receptionist:ready':        { adapter: string }
-  'ai:receptionist:response':     { text: string; audioUrl?: string }
-  'ai:session:start':             Record<string, never>
-  'ai:session:end':               { durationMs: number; reason: string }
-  'ai:error':                     { error: string; adapter: string }
+  'ai:session:start':             { sessionId: string }
+  'ai:session:end':               { sessionId: string; durationMs: number; reason: string }
+  'ai:state:change':              { state: AIConversationState; sessionId: string }
+  'ai:transcript:delta':          { role: 'user' | 'assistant'; text: string; final: boolean }
+  'ai:speaking:start':            { sessionId: string }
+  'ai:speaking:end':              { sessionId: string }
+  'ai:listening:start':           { sessionId: string }
+  'ai:listening:end':             { sessionId: string }
+  'ai:error':                     { error: string; code: string; sessionId?: string }
+
+  // ── Audio Events ──────────────────────────────────────────────────────────
+  'audio:muted':                  { muted: boolean }
+  'audio:unlocked':               Record<string, never>
 
   // ── System Lifecycle ──────────────────────────────────────────────────────
   'system:ready':                 { systemName: string }
