@@ -19,6 +19,10 @@ class VideoEngineClass {
   private initialized      = false
   private readonly cleanupFns: Array<() => void> = []
 
+  // RAF throttle: batch scroll events, seek at most once per animation frame
+  private rafHandle: number | null = null
+  private pendingScrub: { sceneId: string; progress: number } | null = null
+
   init(): void {
     if (this.initialized) return
 
@@ -26,9 +30,9 @@ class VideoEngineClass {
       this.applyMobileStrategy()
     })
 
-    // Scroll scrubbing — each scene's video currentTime follows scroll progress
+    // Scroll scrubbing — RAF-throttled so we seek at most 60x/second
     const unsubScrub = eventBus.on('scene:progress:update', ({ scene, progress }) => {
-      this.scrubScene(scene, progress)
+      this.queueScrub(scene, progress)
     })
 
     // Pre-load next scene when approaching end of current one
@@ -121,6 +125,11 @@ class VideoEngineClass {
   }
 
   destroy(): void {
+    if (this.rafHandle !== null) {
+      cancelAnimationFrame(this.rafHandle)
+      this.rafHandle = null
+    }
+    this.pendingScrub = null
     this.hlsInstances.forEach((hls) => hls.destroy())
     this.hlsInstances.clear()
     this.loadedScenes.clear()
@@ -137,17 +146,30 @@ class VideoEngineClass {
 
   // ─── Private ──────────────────────────────────────────────────────────────
 
-  private scrubScene(sceneId: string, progress: number): void {
+  // Queue a scrub; coalesce multiple scroll events into one seek per animation frame
+  private queueScrub(sceneId: string, progress: number): void {
+    this.pendingScrub = { sceneId, progress }
+    if (this.rafHandle !== null) return
+    this.rafHandle = requestAnimationFrame(() => {
+      this.rafHandle = null
+      const pending = this.pendingScrub
+      if (!pending) return
+      this.pendingScrub = null
+      this.executeScrub(pending.sceneId, pending.progress)
+    })
+  }
+
+  private executeScrub(sceneId: string, progress: number): void {
     const manifest = VIDEO_MANIFESTS[sceneId.toLowerCase()]
     if (!manifest) return
     const el = this.videoElements.get(sceneId)
-    if (!el || el.readyState < 1) return
+    if (!el || el.readyState < 2) return
 
     const duration   = manifest.durationMs / 1000
     const targetTime = Math.min(Math.max(progress * duration, 0), duration - 0.05)
 
-    // Only seek if change is significant enough to matter
-    if (Math.abs(el.currentTime - targetTime) > 0.04) {
+    // Only seek if change is meaningful (reduces stutter on micro-scrolls)
+    if (Math.abs(el.currentTime - targetTime) > 0.08) {
       el.currentTime = targetTime
     }
   }

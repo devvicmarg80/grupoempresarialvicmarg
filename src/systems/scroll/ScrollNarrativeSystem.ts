@@ -14,6 +14,7 @@ class ScrollNarrativeSystemClass {
   private prevSceneIndex  = 0
   private lastScrollY     = 0
   private lastScrollTime  = 0
+  private lastProgress    = -1   // skip emitting if progress didn't change
   private initialized     = false
   private readonly cleanupFns: Array<() => void> = []
 
@@ -54,7 +55,12 @@ class ScrollNarrativeSystemClass {
     this.lastScrollY    = scrollY
     this.lastScrollTime = now
 
-    const progress      = Math.max(0, Math.min(1, scrollY / scrollHeight))
+    const progress = Math.max(0, Math.min(1, scrollY / scrollHeight))
+
+    // Skip if progress hasn't moved enough to matter (< 0.05% of total scroll)
+    if (Math.abs(progress - this.lastProgress) < 0.0005) return
+    this.lastProgress = progress
+
     const sceneIndex    = Math.min(Math.floor(progress * TOTAL_SCENES), TOTAL_SCENES - 1)
     const sceneProgress = Math.max(0, Math.min(1, (progress * TOTAL_SCENES) - sceneIndex))
     const sceneId       = SCENE_SEQUENCE[sceneIndex] as SceneId | undefined
