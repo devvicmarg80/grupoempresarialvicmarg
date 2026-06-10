@@ -119,34 +119,34 @@ export function VideoCanvas() {
           <div className="flex flex-col items-center pt-20 gap-2">
             <div
               className="h-px w-12"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }}
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)' }}
             />
-            <p className="text-[10px] uppercase tracking-[0.32em] text-white/20 font-mono">
+            <p className="text-[10px] uppercase tracking-[0.32em] text-white/55 font-mono">
               Grupo Empresarial
             </p>
             <h1
-              className="text-5xl md:text-6xl text-white/60"
+              className="text-5xl md:text-6xl text-white/90"
               style={{ fontFamily: 'var(--font-cinematic)', fontWeight: 300, letterSpacing: '-0.03em' }}
             >
               VICMARG
             </h1>
             <div
               className="h-px w-12"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }}
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)' }}
             />
           </div>
 
           {/* Scroll indicator — bottom center */}
           <div className="flex flex-col items-center pb-14 gap-3">
-            <span className="text-[9px] uppercase tracking-[0.24em] text-white/25 font-mono">
+            <span className="text-[9px] uppercase tracking-[0.24em] text-white/65 font-mono">
               Desplázate para explorar
             </span>
             <div
               className="w-5 h-8 rounded-full flex items-start justify-center pt-1.5"
-              style={{ border: '1px solid rgba(255,255,255,0.12)' }}
+              style={{ border: '1px solid rgba(255,255,255,0.35)' }}
             >
               <div
-                className="w-px h-2.5 rounded-full bg-white/25 animate-bounce"
+                className="w-px h-2.5 rounded-full bg-white/60 animate-bounce"
                 style={{ animationDuration: '1.8s' }}
               />
             </div>
