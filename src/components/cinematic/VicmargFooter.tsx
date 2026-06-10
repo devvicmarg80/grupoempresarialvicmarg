@@ -1,12 +1,9 @@
 'use client'
 
-// VicmargFooter — fixed bottom bar, always visible across all scenes.
-// Opacity intensifies during CONVERSION to reinforce the CTA moment.
-
 import Link from 'next/link'
 import { useSceneStore } from '@store/scene.store'
 
-const WHATSAPP_NUMBER  = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '573000000000'
+const WHATSAPP_NUMBER  = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '573332555375'
 const WHATSAPP_MESSAGE = encodeURIComponent('Hola VICMARG, me gustaría recibir más información.')
 const WHATSAPP_URL     = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`
 
@@ -21,83 +18,88 @@ export function VicmargFooter() {
       className="fixed bottom-0 left-0 right-0 pointer-events-none"
       style={{
         zIndex:     35,
-        transition: 'opacity 800ms cubic-bezier(0.76, 0, 0.24, 1)',
-        opacity:    isConversion ? 1 : 0.45,
+        transition: 'opacity 600ms cubic-bezier(0.76, 0, 0.24, 1)',
+        opacity:    isConversion ? 1 : 0.75,
       }}
     >
-      {/* Top separator line */}
+      {/* Top separator */}
       <div
         className="h-px"
         style={{
           background: isConversion
-            ? 'linear-gradient(90deg, transparent, rgba(245,158,11,0.25), transparent)'
-            : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
-          transition: 'background 800ms ease',
+            ? 'linear-gradient(90deg, transparent, rgba(245,158,11,0.45), transparent)'
+            : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.20), transparent)',
+          transition: 'background 600ms ease',
         }}
       />
 
       <div
-        className="px-6 py-3"
+        className="px-5 py-2.5"
         style={{
-          background: 'rgba(4,5,14,0.85)',
-          backdropFilter:       'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          background:           'rgba(4,5,14,0.92)',
+          backdropFilter:       'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
         }}
       >
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Main row */}
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
 
           {/* Brand */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0">
             <div
-              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(37,99,235,0.2)', border: '1px solid rgba(96,165,250,0.2)' }}
+              className="w-7 h-7 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(37,99,235,0.25)', border: '1px solid rgba(96,165,250,0.30)' }}
             >
-              <span className="text-blue-400 text-[9px] font-mono font-medium">VM</span>
+              <span className="text-blue-400 text-[9px] font-mono font-semibold">VM</span>
             </div>
             <div>
               <p
-                className="text-[11px] text-white/60 leading-none"
+                className="text-[11px] text-white/85 leading-none"
                 style={{ fontFamily: 'var(--font-cinematic)', fontWeight: 400, letterSpacing: '0.06em' }}
               >
                 VICMARG
               </p>
-              <p className="text-[9px] text-white/25 font-mono uppercase tracking-[0.12em] mt-0.5">
+              <p className="text-[9px] text-white/50 font-mono uppercase tracking-[0.12em] mt-0.5">
                 Grupo Empresarial
               </p>
             </div>
           </div>
 
-          {/* Nav links */}
-          <nav className="pointer-events-auto flex items-center gap-5">
+          {/* Nav */}
+          <nav className="pointer-events-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <Link
               href="/asesoria-educativa"
-              className="text-[10px] uppercase tracking-[0.14em] text-white/35 hover:text-white/65 transition-colors font-mono"
+              className="text-[10px] uppercase tracking-[0.14em] text-white/60 hover:text-white/90 transition-colors duration-200 font-mono"
             >
               Asesoría Educativa
             </Link>
-            <span className="text-white/15 text-[10px]">·</span>
+            <span className="text-white/25 text-[10px]">·</span>
             <Link
               href="/asesoria-empresarial"
-              className="text-[10px] uppercase tracking-[0.14em] text-white/35 hover:text-white/65 transition-colors font-mono"
+              className="text-[10px] uppercase tracking-[0.14em] text-white/60 hover:text-white/90 transition-colors duration-200 font-mono"
             >
               Asesoría Empresarial
             </Link>
-            <span className="text-white/15 text-[10px]">·</span>
+            <span className="text-white/25 text-[10px]">·</span>
             <a
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] uppercase tracking-[0.14em] font-mono transition-colors"
-              style={{ color: 'rgba(74,222,128,0.55)' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = 'rgba(74,222,128,0.85)' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = 'rgba(74,222,128,0.55)' }}
+              className="text-[10px] uppercase tracking-[0.14em] font-mono text-green-400/75 hover:text-green-400 transition-colors duration-200"
             >
               WhatsApp
             </a>
+            <span className="text-white/25 text-[10px]">·</span>
+            <Link
+              href="/politica-de-privacidad"
+              className="text-[10px] uppercase tracking-[0.14em] text-white/45 hover:text-white/75 transition-colors duration-200 font-mono"
+            >
+              Política de Privacidad
+            </Link>
           </nav>
 
           {/* Copyright */}
-          <p className="text-[9px] text-white/20 font-mono tracking-wide hidden sm:block">
+          <p className="text-[9px] text-white/40 font-mono tracking-wide hidden md:block shrink-0">
             © {YEAR} VICMARG. Todos los derechos reservados.
           </p>
 

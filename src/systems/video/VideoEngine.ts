@@ -163,7 +163,7 @@ class VideoEngineClass {
     const manifest = VIDEO_MANIFESTS[sceneId.toLowerCase()]
     if (!manifest) return
     const el = this.videoElements.get(sceneId)
-    if (!el || el.readyState < 2) return
+    if (!el || el.readyState < 1) return
 
     const duration   = manifest.durationMs / 1000
     const targetTime = Math.min(Math.max(progress * duration, 0), duration - 0.05)

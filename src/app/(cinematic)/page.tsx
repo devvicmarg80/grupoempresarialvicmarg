@@ -1,9 +1,11 @@
-import { VideoCanvas }        from '@components/canvas/VideoCanvas'
-import { AtmosphericCanvas }  from '@components/canvas/AtmosphericCanvas'
-import { OverlayContainer }   from '@components/overlays/OverlayContainer'
-import { DiscoveryHologram }  from '@components/hologram/DiscoveryHologram'
-import { VicmargFooter }      from '@components/cinematic/VicmargFooter'
-import { DevRuntimePanel }    from '@components/dev/DevRuntimePanel'
+import { VideoCanvas }       from '@components/canvas/VideoCanvas'
+import { AtmosphericCanvas } from '@components/canvas/AtmosphericCanvas'
+import { ParticleCanvas }    from '@components/canvas/ParticleCanvas'
+import { AmbientGlow }       from '@components/canvas/AmbientGlow'
+import { OverlayContainer }  from '@components/overlays/OverlayContainer'
+import { DiscoveryHologram } from '@components/hologram/DiscoveryHologram'
+import { VicmargFooter }     from '@components/cinematic/VicmargFooter'
+import { DevRuntimePanel }   from '@components/dev/DevRuntimePanel'
 
 /**
  * VICMARG cinematic home page.
@@ -14,9 +16,11 @@ import { DevRuntimePanel }    from '@components/dev/DevRuntimePanel'
  * Layer stack (z-index):
  *   z-10    VideoCanvas        — fixed full-screen video background
  *   z-11    AtmosphericCanvas  — per-scene CSS gradient atmosphere
+ *   z-16    AmbientGlow        — idle light effects (breathing glow + scan ray)
+ *   z-19    ParticleCanvas     — floating luminous particles per scene
  *   z-26    ScrollHint         — initial "desplázate" indicator (inside VideoCanvas)
  *   z-30    DiscoveryHologram  — Three.js hologram, HIGH tier + DISCOVERY only
- *   z-35    VicmargFooter      — fixed bottom bar
+ *   z-35    VicmargFooter      — fixed bottom bar with nav + privacy link
  *   z-40    OverlayContainer   — Framer Motion glassmorphism overlays
  *   z-9999  DevRuntimePanel    — dev-only runtime HUD
  */
@@ -26,9 +30,11 @@ export default function HomePage() {
       {/* Scroll space — 400vh creates 4 scenes × 100vh of window scroll */}
       <div style={{ height: '400vh' }} aria-hidden="true" />
 
-      {/* Fixed visual layers — rendered above the scroll spacer */}
+      {/* Fixed visual layers */}
       <VideoCanvas />
       <AtmosphericCanvas />
+      <AmbientGlow />
+      <ParticleCanvas />
       <DiscoveryHologram />
       <OverlayContainer />
       <VicmargFooter />
