@@ -89,6 +89,10 @@ export interface VicmargEventMap {
   'user:converted':               { scene: SceneId; timestamp: number }
   'user:session:started':         { userId: string }
   'user:session:ended':           Record<string, never>
+  // Funnel events
+  'user:affiliation:answered':    { isAffiliated: boolean }
+  'user:service:selected':        { service: 'educativa' | 'empresarial' }
+  'user:registration:submitted':  { name: string; email: string; phone: string }
 
   // ── AI Events ─────────────────────────────────────────────────────────────
   'ai:receptionist:ready':        { adapter: string }

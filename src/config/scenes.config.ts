@@ -10,40 +10,40 @@ import type { SceneConfig, VideoManifest } from '@types-app'
 // URLs point to Cloudflare R2 via the /videos proxy rewrite in next.config.ts
 export const VIDEO_MANIFESTS: Record<string, VideoManifest> = {
   arrival: {
-    sceneId:         'arrival',
-    masterPlaylistUrl: '/videos/scenes/arrival/master.m3u8',
-    posterUrl:         '/videos/scenes/arrival/poster.avif',
-    posterBlurUrl:     '/videos/scenes/arrival/poster-blur.webp',
-    durationMs:        10_000,   // 8-12 seconds per storyboard
+    sceneId:           'arrival',
+    masterPlaylistUrl: '/videos/scenes/arrival/video.mp4',
+    posterUrl:         '/videos/scenes/arrival/poster.jpg',
+    posterBlurUrl:     '/videos/scenes/arrival/poster-blur.jpg',
+    durationMs:        8_000,
     aspectRatio:       '16:9',
-    qualities:         ['1080p', '720p', '480p', '360p'],
+    qualities:         ['1080p'],
   },
   greeting: {
-    sceneId:         'greeting',
-    masterPlaylistUrl: '/videos/scenes/greeting/master.m3u8',
-    posterUrl:         '/videos/scenes/greeting/poster.avif',
-    posterBlurUrl:     '/videos/scenes/greeting/poster-blur.webp',
-    durationMs:        15_000,   // Receptionist interaction window
+    sceneId:           'greeting',
+    masterPlaylistUrl: '/videos/scenes/greeting/video.mp4',
+    posterUrl:         '/videos/scenes/greeting/poster.jpg',
+    posterBlurUrl:     '/videos/scenes/greeting/poster-blur.jpg',
+    durationMs:        8_000,
     aspectRatio:       '16:9',
-    qualities:         ['1080p', '720p', '480p', '360p'],
+    qualities:         ['1080p'],
   },
   discovery: {
-    sceneId:         'discovery',
-    masterPlaylistUrl: '/videos/scenes/discovery/master.m3u8',
-    posterUrl:         '/videos/scenes/discovery/poster.avif',
-    posterBlurUrl:     '/videos/scenes/discovery/poster-blur.webp',
-    durationMs:        20_000,   // Hologram + services exploration
+    sceneId:           'discovery',
+    masterPlaylistUrl: '/videos/scenes/discovery/video.mp4',
+    posterUrl:         '/videos/scenes/discovery/poster.jpg',
+    posterBlurUrl:     '/videos/scenes/discovery/poster-blur.jpg',
+    durationMs:        8_000,
     aspectRatio:       '16:9',
-    qualities:         ['1080p', '720p', '480p', '360p'],
+    qualities:         ['1080p'],
   },
   conversion: {
-    sceneId:         'conversion',
-    masterPlaylistUrl: '/videos/scenes/conversion/master.m3u8',
-    posterUrl:         '/videos/scenes/conversion/poster.avif',
-    posterBlurUrl:     '/videos/scenes/conversion/poster-blur.webp',
-    durationMs:        12_000,   // CTA + open ending
+    sceneId:           'conversion',
+    masterPlaylistUrl: '/videos/scenes/conversion/video.mp4',
+    posterUrl:         '/videos/scenes/conversion/poster.jpg',
+    posterBlurUrl:     '/videos/scenes/conversion/poster-blur.jpg',
+    durationMs:        8_000,
     aspectRatio:       '16:9',
-    qualities:         ['1080p', '720p', '480p', '360p'],
+    qualities:         ['1080p'],
   },
 } as const
 
@@ -90,20 +90,16 @@ export const SCENES_CONFIG: Record<string, SceneConfig> = {
     nextScene:       'CONVERSION',
     gsapTimelineKey: 'discovery',
     videoManifestKey:'discovery',
-    threeJSEnabled:  true, // Three.js hologram — Phase 3
+    threeJSEnabled:  true,
     overlayTriggers: [
       {
-        overlayId:            'services-hologram-menu',
-        triggerAtProgress:    0.35, // After hologram establishes
-        priority:             3,
+        // Funnel gate: asks affiliation → routes to services or pre-registration
+        overlayId:            'affiliation-check',
+        triggerAtProgress:    0.30,
+        priority:             4,
         dismissOnSceneChange: true,
       },
-      {
-        overlayId:            'ecosystem-explorer',
-        triggerAtProgress:    0.65, // Deeper exploration
-        priority:             2,
-        dismissOnSceneChange: true,
-      },
+      // services-hologram-menu is now triggered by OverlaySystem after affiliation confirmed
     ],
   },
 

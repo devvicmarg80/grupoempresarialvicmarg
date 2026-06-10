@@ -4,7 +4,6 @@
 
 @layer base {
   :root {
-    /* Easing CSS variables — mirrors animation.config.ts */
     --ease-cinematic: cubic-bezier(0.76, 0, 0.24, 1);
     --ease-entry:     cubic-bezier(0.16, 1, 0.3, 1);
     --ease-exit:      cubic-bezier(0.4, 0, 1, 1);
@@ -22,35 +21,31 @@
   }
 
   html {
-    height: 100%;
+    scroll-behavior: auto;
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    /* GSAP ScrollTrigger controls scroll — disable browser-native smooth scroll */
-    scroll-behavior: auto;
-    overflow: hidden;
+    overflow-x: hidden;
   }
 
   body {
-    height: 100%;
     min-height: 100dvh;
-    background-color: #0d0d1f; /* onyx.primary */
+    background-color: #0d0d1f;
     color: #ffffff;
     font-family: var(--font-display), system-ui, sans-serif;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    /* Hide scrollbar — scroll still works */
+    scrollbar-width: none;
+  }
+
+  body::-webkit-scrollbar {
+    display: none;
   }
 
   ::selection {
     background-color: rgba(37, 99, 235, 0.35);
     color: #ffffff;
   }
-}
-
-/* Scroll narrative container — hide scrollbar, preserve scroll functionality */
-#scroll-narrative {
-  scrollbar-width: none;
-}
-#scroll-narrative::-webkit-scrollbar {
-  display: none;
 }

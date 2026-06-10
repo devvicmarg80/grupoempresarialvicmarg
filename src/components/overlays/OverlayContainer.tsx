@@ -4,6 +4,8 @@ import { AnimatePresence, motion, type Variants } from 'framer-motion'
 import { useOverlayStore, selectActiveOverlays } from '@store/overlay.store'
 import { Materials }                from '@config/design-tokens'
 import { ReceptionistCapture }      from './ReceptionistCapture'
+import { AffiliationCheck }         from './AffiliationCheck'
+import { PreRegistrationForm }      from './PreRegistrationForm'
 import { ServicesHologram }         from './ServicesHologram'
 import { EcosystemExplorer }        from './EcosystemExplorer'
 import { PremiumCTA }               from './PremiumCTA'
@@ -118,6 +120,8 @@ function renderOverlayContent(overlay: OverlayInstance, onDismiss: () => void): 
   switch (overlay.id) {
     case 'ai-receptionist':           return <AIReceptionistOverlay overlay={overlay} onDismiss={onDismiss} />
     case 'receptionist-name-capture': return <ReceptionistCapture  overlay={overlay} onDismiss={onDismiss} />
+    case 'affiliation-check':         return <AffiliationCheck     overlay={overlay} onDismiss={onDismiss} />
+    case 'pre-registration-form':     return <PreRegistrationForm  overlay={overlay} onDismiss={onDismiss} />
     case 'services-hologram-menu':    return <ServicesHologram     overlay={overlay} onDismiss={onDismiss} />
     case 'ecosystem-explorer':        return <EcosystemExplorer    overlay={overlay} onDismiss={onDismiss} />
     case 'premium-cta':               return <PremiumCTA           overlay={overlay} onDismiss={onDismiss} />

@@ -20,6 +20,8 @@ export interface UserJourney {
   readonly convertedAt: number | null
 }
 
+export type ServiceType = 'educativa' | 'empresarial'
+
 /** Zustand user store shape */
 export interface UserState {
   visitorName: string | null     // Captured in Scene 02 GREETING
@@ -29,6 +31,10 @@ export interface UserState {
   capturedAt: number | null      // Timestamp of name capture
   session: VicmargSession | null // Supabase session
   journey: UserJourney
+  // Funnel state
+  isAffiliated: boolean | null
+  selectedService: ServiceType | null
+  registrationSubmitted: boolean
 }
 
 /** Zustand user store actions */
@@ -40,4 +46,8 @@ export interface UserActions {
   recordSceneReached: (scene: SceneId) => void
   setConverted: () => void
   reset: () => void
+  // Funnel actions
+  setAffiliation: (isAffiliated: boolean) => void
+  setSelectedService: (service: ServiceType) => void
+  setRegistrationSubmitted: () => void
 }

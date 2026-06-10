@@ -1,8 +1,7 @@
 // OverlaySystem — reads SCENES_CONFIG.overlayTriggers, opens overlays at correct progress.
-// Subscribes to: scene:progress:update, scene:transition:start
+// Also handles funnel routing: affiliation check → services or pre-registration.
+// Subscribes to: scene:progress:update, scene:transition:start, user:affiliation:answered
 // Writes to: useOverlayStore (openOverlay, closeOverlay)
-// Each trigger fires once per session (firedTriggers Set). Resets on scene revisit only
-// if the user has navigated backward and the trigger was dismissOnSceneChange.
 
 import { eventBus }       from '@lib/event-bus'
 import { useOverlayStore } from '@store/overlay.store'
@@ -25,7 +24,36 @@ class OverlaySystemClass {
       this.dismissSceneOverlays(from)
     })
 
-    this.cleanupFns.push(unsubProgress, unsubTransition)
+    // Funnel routing: affiliation answer → services or pre-registration
+    const unsubAffiliation = eventBus.on('user:affiliation:answered', ({ isAffiliated }) => {
+      if (isAffiliated) {
+        useOverlayStore.getState().openOverlay({
+          id:                   'services-hologram-menu',
+          priority:             3 as OverlayPriority,
+          sceneId:              'DISCOVERY',
+          dismissible:          true,
+          dismissOnSceneChange: true,
+          glassMaterial:        'cobalt',
+          position:             { vertical: 'center', horizontal: 'center' },
+          backdropClose:        false,
+        })
+        eventBus.emit('overlay:open', { overlayId: 'services-hologram-menu', priority: 3, sceneId: 'DISCOVERY' })
+      } else {
+        useOverlayStore.getState().openOverlay({
+          id:                   'pre-registration-form',
+          priority:             4 as OverlayPriority,
+          sceneId:              'DISCOVERY',
+          dismissible:          true,
+          dismissOnSceneChange: false,
+          glassMaterial:        'dark',
+          position:             { vertical: 'center', horizontal: 'center' },
+          backdropClose:        false,
+        })
+        eventBus.emit('overlay:open', { overlayId: 'pre-registration-form', priority: 4, sceneId: 'DISCOVERY' })
+      }
+    })
+
+    this.cleanupFns.push(unsubProgress, unsubTransition, unsubAffiliation)
     this.initialized = true
     eventBus.emit('system:ready', { systemName: 'OverlaySystem' })
   }

@@ -1,7 +1,7 @@
-// VideoEngine — HLS.js orchestration for the 4 cinematic scenes.
+// VideoEngine — scroll-driven video for the 4 cinematic scenes.
 // Singleton: import { VideoEngine } from '@systems/video/VideoEngine'
-// Only VideoCanvas.tsx calls attachElement / detachElement / loadScene / play.
-// State updates flow to Zustand stores. Cross-system comms via EventBus only.
+// Scroll position maps to video.currentTime (scrubbing).
+// No autonomous playback — the scroll wheel controls every frame.
 
 import Hls from 'hls.js'
 import { eventBus } from '@lib/event-bus'
@@ -15,11 +15,10 @@ import type { DeviceTier, MobileVideoStrategy } from '@types-app'
 class VideoEngineClass {
   private readonly videoElements = new Map<string, HTMLVideoElement>()
   private readonly hlsInstances  = new Map<string, Hls>()
+  private readonly loadedScenes  = new Set<string>()
   private initialized      = false
-  private pendingFromScene: string | null = null
   private readonly cleanupFns: Array<() => void> = []
 
-  /** Initialize EventBus subscriptions. Call once in SystemProvider. */
   init(): void {
     if (this.initialized) return
 
@@ -27,44 +26,40 @@ class VideoEngineClass {
       this.applyMobileStrategy()
     })
 
+    // Scroll scrubbing — each scene's video currentTime follows scroll progress
+    const unsubScrub = eventBus.on('scene:progress:update', ({ scene, progress }) => {
+      this.scrubScene(scene, progress)
+    })
+
+    // Pre-load next scene when approaching end of current one
     const unsubProgress = eventBus.on('scene:progress:update', ({ scene, progress }) => {
       if (progress < VIDEO_MEMORY_BUDGET.preloadTriggerProgress) return
       const next = this.getNextSceneId(scene)
-      if (next && !this.hlsInstances.has(next)) {
-        void this.preloadScene(next)
+      if (next && !this.loadedScenes.has(next)) {
+        void this.loadScene(next)
       }
     })
 
-    // Phase 3: respond to SceneManager transitions
-    const unsubTransitionStart = eventBus.on('scene:transition:start', ({ from, to }) => {
-      this.pendingFromScene = from
-      void this.loadScene(to).then(() => void this.play(to))
+    // Scene transition: load next scene, no autonomous play (scrubbing handles it)
+    const unsubTransitionStart = eventBus.on('scene:transition:start', ({ to }) => {
+      void this.loadScene(to)
     })
 
-    const unsubTransitionComplete = eventBus.on('scene:transition:complete', () => {
-      if (this.pendingFromScene) {
-        this.pause(this.pendingFromScene)
-        this.pendingFromScene = null
-      }
-    })
-
-    this.cleanupFns.push(unsubDetection, unsubProgress, unsubTransitionStart, unsubTransitionComplete)
+    this.cleanupFns.push(unsubDetection, unsubScrub, unsubProgress, unsubTransitionStart)
     this.initialized = true
     eventBus.emit('system:ready', { systemName: 'VideoEngine' })
   }
 
-  /** Register a DOM video element for a scene. Called from ref callback in VideoCanvas. */
   attachElement(sceneId: string, el: HTMLVideoElement): void {
     this.videoElements.set(sceneId, el)
   }
 
-  /** Remove and clean up a scene's element. Called on ref null in VideoCanvas. */
   detachElement(sceneId: string): void {
     this.destroyHLS(sceneId)
+    this.loadedScenes.delete(sceneId)
     this.videoElements.delete(sceneId)
   }
 
-  /** Load HLS manifest for a scene into its registered video element. */
   async loadScene(sceneId: string): Promise<void> {
     const manifest = VIDEO_MANIFESTS[sceneId.toLowerCase()]
     if (!manifest) return
@@ -72,12 +67,7 @@ class VideoEngineClass {
     const el = this.videoElements.get(sceneId)
     if (!el) return
 
-    // Skip HLS recreation if this scene was already preloaded
-    if (this.hlsInstances.has(sceneId)) {
-      useVideoStore.getState().setActiveVideo(sceneId)
-      eventBus.emit('video:loading', { sceneId })
-      return
-    }
+    if (this.loadedScenes.has(sceneId)) return
 
     const { mobileStrategy } = useVideoStore.getState()
     const { deviceTier }     = usePerformanceStore.getState()
@@ -86,32 +76,33 @@ class VideoEngineClass {
     useVideoStore.getState().setPlaybackState('loading')
     eventBus.emit('video:loading', { sceneId })
 
-    if (mobileStrategy === 'native-hls') {
+    const isMp4 = manifest.masterPlaylistUrl.endsWith('.mp4')
+
+    if (isMp4 || mobileStrategy === 'native-hls') {
       el.src = manifest.masterPlaylistUrl
+      el.preload  = 'auto'   // upgrade from 'metadata' to 'auto' when actively loading
       el.load()
+      this.loadedScenes.add(sceneId)
       this.attachNativeListeners(sceneId, el)
     } else if (typeof window !== 'undefined' && Hls.isSupported()) {
       this.loadWithHLS(sceneId, el, manifest.masterPlaylistUrl, deviceTier)
+      this.loadedScenes.add(sceneId)
     } else {
-      // No HLS support — poster only, no video playback
       useVideoStore.getState().setPlaybackState('paused')
     }
   }
 
-  /** Start playback. Always muted for autoplay policy compliance. */
+  // Play is only used to unlock audio on user gesture — not for scroll mode
   async play(sceneId: string): Promise<void> {
     const el = this.videoElements.get(sceneId)
     if (!el) return
-
     el.muted       = true
     el.playsInline = true
-
     try {
       await el.play()
       useVideoStore.getState().setPlaybackState('playing')
       eventBus.emit('video:playing', { sceneId, currentTime: el.currentTime })
     } catch {
-      // Autoplay blocked — will retry on first user interaction
       useVideoStore.getState().setPlaybackState('paused')
     }
   }
@@ -124,16 +115,15 @@ class VideoEngineClass {
     eventBus.emit('video:paused', { sceneId })
   }
 
-  /** Call on first user gesture to unlock audio for future AI receptionist voice. */
   unlockAutoplay(): void {
     useUserStore.getState().setInteracted(true)
     eventBus.emit('user:first:interaction', {})
   }
 
-  /** Full teardown. Call in SystemProvider useEffect cleanup. */
   destroy(): void {
     this.hlsInstances.forEach((hls) => hls.destroy())
     this.hlsInstances.clear()
+    this.loadedScenes.clear()
     this.videoElements.clear()
     this.cleanupFns.forEach((fn) => fn())
     this.cleanupFns.length = 0
@@ -146,6 +136,21 @@ class VideoEngineClass {
   }
 
   // ─── Private ──────────────────────────────────────────────────────────────
+
+  private scrubScene(sceneId: string, progress: number): void {
+    const manifest = VIDEO_MANIFESTS[sceneId.toLowerCase()]
+    if (!manifest) return
+    const el = this.videoElements.get(sceneId)
+    if (!el || el.readyState < 1) return
+
+    const duration   = manifest.durationMs / 1000
+    const targetTime = Math.min(Math.max(progress * duration, 0), duration - 0.05)
+
+    // Only seek if change is significant enough to matter
+    if (Math.abs(el.currentTime - targetTime) > 0.04) {
+      el.currentTime = targetTime
+    }
+  }
 
   private loadWithHLS(
     sceneId:  string,
@@ -198,28 +203,10 @@ class VideoEngineClass {
     }, { once: true })
 
     el.addEventListener('error', () => {
-      const err = el.error?.message ?? 'native_hls_error'
+      const err = el.error?.message ?? 'native_error'
       useVideoStore.getState().setError(err)
       eventBus.emit('video:error', { sceneId, error: err, fatal: false })
     }, { once: true })
-  }
-
-  private async preloadScene(sceneId: string): Promise<void> {
-    const { currentFPS } = usePerformanceStore.getState()
-    if (currentFPS < VIDEO_MEMORY_BUDGET.preloadAbortFPSThreshold) {
-      eventBus.emit('video:preload:aborted', { sceneId, reason: 'fps_below_threshold' })
-      return
-    }
-    const manifest = VIDEO_MANIFESTS[sceneId.toLowerCase()]
-    if (!manifest) return
-
-    const el = this.videoElements.get(sceneId)
-    if (!el || this.hlsInstances.has(sceneId)) return
-
-    const { deviceTier } = usePerformanceStore.getState()
-    eventBus.emit('video:preload:start', { sceneId })
-    this.loadWithHLS(sceneId, el, manifest.masterPlaylistUrl, deviceTier)
-    eventBus.emit('video:preload:complete', { sceneId })
   }
 
   private applyMobileStrategy(): void {

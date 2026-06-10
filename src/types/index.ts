@@ -63,4 +63,5 @@ export type {
   UserJourney,
   UserState,
   UserActions,
+  ServiceType,
 } from './user.types'
