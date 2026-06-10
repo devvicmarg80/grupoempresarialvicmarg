@@ -22,32 +22,31 @@ export function VicmargFooter() {
         opacity:    isConversion ? 1 : 0.75,
       }}
     >
-      {/* Top separator */}
+      {/* Separator */}
       <div
         className="h-px"
         style={{
           background: isConversion
             ? 'linear-gradient(90deg, transparent, rgba(245,158,11,0.45), transparent)'
-            : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.20), transparent)',
+            : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)',
           transition: 'background 600ms ease',
         }}
       />
 
       <div
-        className="px-5 py-2.5"
+        className="px-6 py-4"
         style={{
-          background:           'rgba(4,5,14,0.92)',
+          background:           'rgba(4,5,14,0.93)',
           backdropFilter:       'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
         }}
       >
-        {/* Main row */}
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-5xl mx-auto flex items-start justify-between gap-8">
 
-          {/* Brand */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          {/* Brand — left */}
+          <div className="flex items-center gap-2.5 shrink-0 pt-0.5">
             <div
-              className="w-7 h-7 rounded-full flex items-center justify-center"
+              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
               style={{ background: 'rgba(37,99,235,0.25)', border: '1px solid rgba(96,165,250,0.30)' }}
             >
               <span className="text-blue-400 text-[9px] font-mono font-semibold">VM</span>
@@ -65,46 +64,55 @@ export function VicmargFooter() {
             </div>
           </div>
 
-          {/* Nav */}
-          <nav className="pointer-events-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <Link
-              href="/asesoria-educativa"
-              className="text-[10px] uppercase tracking-[0.14em] text-white/60 hover:text-white/90 transition-colors duration-200 font-mono"
-            >
-              Asesoría Educativa
-            </Link>
-            <span className="text-white/25 text-[10px]">·</span>
-            <Link
-              href="/asesoria-empresarial"
-              className="text-[10px] uppercase tracking-[0.14em] text-white/60 hover:text-white/90 transition-colors duration-200 font-mono"
-            >
-              Asesoría Empresarial
-            </Link>
-            <span className="text-white/25 text-[10px]">·</span>
+          {/* Nav — vertical, center */}
+          <nav className="pointer-events-auto flex flex-col gap-2 flex-1">
+            <NavLink href="/asesoria-educativa">Asesoría Educativa</NavLink>
+            <NavLink href="/asesoria-empresarial">Asesoría Empresarial</NavLink>
+            <NavLink href="/politica-de-calidad">Política de Calidad</NavLink>
+            <NavLink href="/politica-de-privacidad" dim>Política de Privacidad</NavLink>
             <a
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] uppercase tracking-[0.14em] font-mono text-green-400/75 hover:text-green-400 transition-colors duration-200"
+              className="text-[10px] uppercase tracking-[0.14em] font-mono text-green-400/70 hover:text-green-400 transition-colors duration-200 w-fit"
             >
               WhatsApp
             </a>
-            <span className="text-white/25 text-[10px]">·</span>
-            <Link
-              href="/politica-de-privacidad"
-              className="text-[10px] uppercase tracking-[0.14em] text-white/45 hover:text-white/75 transition-colors duration-200 font-mono"
-            >
-              Política de Privacidad
-            </Link>
           </nav>
 
-          {/* Copyright */}
-          <p className="text-[9px] text-white/40 font-mono tracking-wide hidden md:block shrink-0">
-            © {YEAR} VICMARG. Todos los derechos reservados.
+          {/* Copyright — right */}
+          <p className="text-[9px] text-white/35 font-mono tracking-wide hidden sm:block shrink-0 pt-0.5 text-right leading-relaxed">
+            © {YEAR} VICMARG<br />
+            Todos los derechos<br />
+            reservados.
           </p>
 
         </div>
       </div>
     </footer>
+  )
+}
+
+function NavLink({
+  href,
+  children,
+  dim,
+}: {
+  href: string
+  children: React.ReactNode
+  dim?: boolean
+}) {
+  return (
+    <Link
+      href={href}
+      className={[
+        'text-[10px] uppercase tracking-[0.14em] font-mono transition-colors duration-200 w-fit',
+        dim
+          ? 'text-white/45 hover:text-white/70'
+          : 'text-white/65 hover:text-white/95',
+      ].join(' ')}
+    >
+      {children}
+    </Link>
   )
 }

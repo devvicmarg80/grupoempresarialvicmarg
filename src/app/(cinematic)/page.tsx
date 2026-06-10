@@ -2,6 +2,7 @@ import { VideoCanvas }       from '@components/canvas/VideoCanvas'
 import { AtmosphericCanvas } from '@components/canvas/AtmosphericCanvas'
 import { ParticleCanvas }    from '@components/canvas/ParticleCanvas'
 import { AmbientGlow }       from '@components/canvas/AmbientGlow'
+import { FilmGrain }         from '@components/canvas/FilmGrain'
 import { OverlayContainer }  from '@components/overlays/OverlayContainer'
 import { DiscoveryHologram } from '@components/hologram/DiscoveryHologram'
 import { VicmargFooter }     from '@components/cinematic/VicmargFooter'
@@ -38,6 +39,7 @@ export default function HomePage() {
       <DiscoveryHologram />
       <OverlayContainer />
       <VicmargFooter />
+      <FilmGrain />
 
       {process.env.NODE_ENV === 'development' && <DevRuntimePanel />}
     </>
