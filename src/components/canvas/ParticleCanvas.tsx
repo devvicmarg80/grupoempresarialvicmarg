@@ -1,156 +1,156 @@
 'use client'
 
-// ParticleCanvas — floating luminous particles drifting upward.
-// z-19: above AtmosphericCanvas (z-11), below scroll-hint (z-26).
-// Canvas 2D — no external dependencies, 60fps via requestAnimationFrame.
-// Particle count and color adapt per scene.
+// ParticleCanvas — floating luminous particles, scene-aware color + density.
+// CONVERSION: gold particles, larger, slower — "executive decision" gravity.
+// DISCOVERY:  electric blue, higher density, faster — "alive with data" energy.
+// Performance: Canvas 2D, RAF, pauses on hidden tab, max 72 desktop / 40 mobile.
 
 import { useEffect, useRef } from 'react'
-import { useSceneStore, selectCurrentScene } from '@store/scene.store'
-import type { SceneId } from '@types-app'
+import { useSceneStore }     from '@store/scene.store'
+import type { SceneId }      from '@types-app'
 
 interface Particle {
-  x:          number
-  y:          number
-  vx:         number
-  vy:         number
-  r:          number
-  opacity:    number
-  maxOpacity: number
-  phase:      number   // life phase: 0=fade-in 0.2=hold 0.8=fade-out 1=reset
-  phaseSpeed: number
-  rgb:        string   // e.g. "96,165,250"
+  x: number; y: number
+  vx: number; vy: number
+  r: number; phase: number; opacity: number
 }
 
-const SCENE_RGB: Record<SceneId, string> = {
-  ARRIVAL:    '96,165,250',   // cobalt blue
-  GREETING:   '120,200,255',  // sky blue
-  DISCOVERY:  '59,130,246',   // electric blue
-  CONVERSION: '245,158,11',   // executive gold
+interface SceneCfg {
+  rgb: string; count: number
+  minR: number; maxR: number
+  speed: number; glow: number
 }
 
-const PARTICLE_COUNT = typeof window !== 'undefined' && window.innerWidth < 768 ? 40 : 72
+const CFG: Record<SceneId, SceneCfg> = {
+  ARRIVAL:    { rgb: '96,165,250',  count: 55, minR: 0.8, maxR: 2.2, speed: 0.30, glow: 8  },
+  GREETING:   { rgb: '120,200,255', count: 62, minR: 0.9, maxR: 2.4, speed: 0.35, glow: 9  },
+  DISCOVERY:  { rgb: '59,130,246',  count: 72, minR: 0.8, maxR: 2.6, speed: 0.50, glow: 12 },
+  CONVERSION: { rgb: '245,158,11',  count: 52, minR: 1.0, maxR: 3.2, speed: 0.22, glow: 16 },
+}
 
-function createParticle(w: number, h: number, rgb: string): Particle {
+function makePt(w: number, h: number, cfg: SceneCfg): Particle {
+  const a = Math.random() * Math.PI * 2
+  const s = (0.4 + Math.random() * 0.6) * cfg.speed
   return {
-    x:          Math.random() * w,
-    y:          Math.random() * h,
-    vx:         (Math.random() - 0.5) * 0.4,
-    vy:         -(Math.random() * 1.2 + 0.3),
-    r:          Math.random() * 1.5 + 0.5,
-    opacity:    0,
-    maxOpacity: Math.random() * 0.45 + 0.15,
-    phase:      Math.random(),
-    phaseSpeed: Math.random() * 0.004 + 0.002,
-    rgb,
+    x: Math.random() * w, y: Math.random() * h,
+    vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+    r: cfg.minR + Math.random() * (cfg.maxR - cfg.minR),
+    phase: Math.random(), opacity: 0,
   }
 }
 
-function resetParticle(p: Particle, w: number, h: number): void {
-  p.x     = Math.random() * w
-  p.y     = h + 10
-  p.vx    = (Math.random() - 0.5) * 0.4
-  p.vy    = -(Math.random() * 1.2 + 0.3)
-  p.phase = 0
+function lerpRgb(from: string, to: string, t: number): string {
+  const a = from.split(',').map(Number) as [number, number, number]
+  const b = to.split(',').map(Number)   as [number, number, number]
+  return `${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)}`
 }
 
 export function ParticleCanvas() {
-  const canvasRef  = useRef<HTMLCanvasElement>(null)
-  const particles  = useRef<Particle[]>([])
-  const rafRef     = useRef<number>(0)
-  const rgbRef     = useRef<string>('96,165,250')
-  const currentScene = useSceneStore(selectCurrentScene)
+  const currentScene = useSceneStore((s) => s.currentScene)
+  const canvasRef    = useRef<HTMLCanvasElement>(null)
+  const sceneRef     = useRef<SceneId>(currentScene)
+  const rafRef       = useRef<number | null>(null)
+  const pts          = useRef<Particle[]>([])
+  const transT       = useRef(1)
+  const prevRgb      = useRef(CFG[currentScene].rgb)
+  const targRgb      = useRef(CFG[currentScene].rgb)
 
-  // Update target color when scene changes (smooth transition handled per-particle)
-  rgbRef.current = SCENE_RGB[currentScene]
+  useEffect(() => {
+    if (sceneRef.current === currentScene) return
+    prevRgb.current  = targRgb.current
+    targRgb.current  = CFG[currentScene].rgb
+    transT.current   = 0
+    sceneRef.current = currentScene
+  }, [currentScene])
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+    const mobile = window.innerWidth < 768
 
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio ?? 1, 2)
-      canvas.width  = window.innerWidth  * dpr
-      canvas.height = window.innerHeight * dpr
-      canvas.style.width  = `${window.innerWidth}px`
-      canvas.style.height = `${window.innerHeight}px`
-      ctx.scale(dpr, dpr)
+    function resize() {
+      if (!canvas) return
+      canvas.width  = window.innerWidth
+      canvas.height = window.innerHeight
+      const cfg = CFG[sceneRef.current]
+      const cnt = mobile ? Math.floor(cfg.count * 0.55) : cfg.count
+      pts.current = Array.from({ length: cnt }, () => makePt(canvas.width, canvas.height, cfg))
     }
 
     resize()
     window.addEventListener('resize', resize, { passive: true })
 
-    // Initialise particles spread across the screen
-    particles.current = Array.from({ length: PARTICLE_COUNT }, () =>
-      createParticle(window.innerWidth, window.innerHeight, rgbRef.current)
-    )
+    let lastTs = 0
+    function draw(ts: number) {
+      if (!canvas || !ctx) return
+      rafRef.current = requestAnimationFrame(draw)
+      const dt = Math.min((ts - lastTs) / 16.67, 3)
+      lastTs = ts
 
-    const draw = () => {
-      const w = window.innerWidth
-      const h = window.innerHeight
-      ctx.clearRect(0, 0, w, h)
+      if (transT.current < 1) transT.current = Math.min(1, transT.current + 0.022 * dt)
+      const rgb = lerpRgb(prevRgb.current, targRgb.current, transT.current)
+      const cfg = CFG[sceneRef.current]
 
-      for (const p of particles.current) {
-        // Slowly drift toward current scene color
-        p.rgb = rgbRef.current
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-        // Advance phase
-        p.phase += p.phaseSpeed
-        if (p.phase >= 1) {
-          resetParticle(p, w, h)
-          continue
-        }
+      for (const p of pts.current) {
+        p.phase = (p.phase + 0.0015 * dt * (cfg.speed / 0.35)) % 1
 
-        // Opacity curve: 0→max at phase 0.2, hold, fade at 0.75→0
-        if (p.phase < 0.2) {
-          p.opacity = (p.phase / 0.2) * p.maxOpacity
-        } else if (p.phase < 0.75) {
-          p.opacity = p.maxOpacity
-        } else {
-          p.opacity = ((1 - p.phase) / 0.25) * p.maxOpacity
-        }
+        if      (p.phase < 0.18) p.opacity = p.phase / 0.18
+        else if (p.phase < 0.75) p.opacity = 1
+        else                      p.opacity = 1 - (p.phase - 0.75) / 0.25
+        p.opacity = Math.max(0, Math.min(1, p.opacity)) * 0.62
 
-        // Move
-        p.x += p.vx
-        p.y += p.vy
+        p.x += p.vx * dt
+        p.y += p.vy * dt
+        if (p.x < -p.r * 4) p.x = canvas.width  + p.r
+        if (p.x > canvas.width  + p.r * 4) p.x = -p.r
+        if (p.y < -p.r * 4) p.y = canvas.height + p.r
+        if (p.y > canvas.height + p.r * 4) p.y = -p.r
 
-        // Wrap horizontally
-        if (p.x < -5) p.x = w + 5
-        if (p.x > w + 5) p.x = -5
+        if (p.opacity <= 0.01) continue
 
-        // Draw glow dot
         ctx.save()
-        ctx.shadowBlur  = p.r * 6
-        ctx.shadowColor = `rgba(${p.rgb},${p.opacity})`
-        ctx.fillStyle   = `rgba(${p.rgb},${p.opacity})`
+        ctx.globalAlpha = p.opacity
+        ctx.shadowColor = `rgba(${rgb},0.9)`
+        ctx.shadowBlur  = cfg.glow * (0.6 + p.r / cfg.maxR * 0.4)
+        ctx.fillStyle   = `rgba(${rgb},1)`
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
         ctx.fill()
+
+        // Extra gold halo for CONVERSION particles
+        if (sceneRef.current === 'CONVERSION' && p.r > 1.8) {
+          ctx.globalAlpha = p.opacity * 0.28
+          ctx.shadowBlur  = cfg.glow * 2
+          ctx.strokeStyle = `rgba(${rgb},0.5)`
+          ctx.lineWidth   = 0.8
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, p.r * 2.4, 0, Math.PI * 2)
+          ctx.stroke()
+        }
         ctx.restore()
       }
-
-      rafRef.current = requestAnimationFrame(draw)
     }
 
-    // Pause when tab is hidden to save resources
-    const onVisibility = () => {
+    function onVis() {
       if (document.hidden) {
-        cancelAnimationFrame(rafRef.current)
+        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
       } else {
+        lastTs = performance.now()
         rafRef.current = requestAnimationFrame(draw)
       }
     }
-    document.addEventListener('visibilitychange', onVisibility)
 
+    document.addEventListener('visibilitychange', onVis)
     rafRef.current = requestAnimationFrame(draw)
 
     return () => {
-      cancelAnimationFrame(rafRef.current)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
       window.removeEventListener('resize', resize)
-      document.removeEventListener('visibilitychange', onVisibility)
+      document.removeEventListener('visibilitychange', onVis)
     }
   }, [])
 
@@ -158,13 +158,8 @@ export function ParticleCanvas() {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      style={{
-        position:      'fixed',
-        inset:         0,
-        zIndex:        19,
-        pointerEvents: 'none',
-        mixBlendMode:  'screen',
-      }}
+      className="fixed inset-0 pointer-events-none"
+      style={{ zIndex: 19, mixBlendMode: 'screen' }}
     />
   )
 }

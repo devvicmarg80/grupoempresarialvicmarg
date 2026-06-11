@@ -31,12 +31,11 @@
 
   body {
     min-height: 100dvh;
-    background-color: #0d0d1f;
+    background-color: #050508;
     color: #ffffff;
     font-family: var(--font-display), system-ui, sans-serif;
     overflow-x: hidden;
     overflow-y: scroll;
-    /* Hide scrollbar — scroll still works */
     scrollbar-width: none;
   }
 
@@ -50,20 +49,31 @@
   }
 }
 
-/* ─── Ambient glow animations ──────────────────────────────────────────────── */
+/* ─── Scroll dot bounce ──────────────────────────────────────────────────────── */
+@keyframes vicmarg-scroll-dot {
+  0%, 100% { transform: translateY(0);   opacity: 0.65; }
+  40%       { transform: translateY(10px); opacity: 0.9;  }
+  60%       { transform: translateY(10px); opacity: 0.9;  }
+}
+
+.vicmarg-scroll-dot {
+  animation: vicmarg-scroll-dot 1.8s cubic-bezier(0.45,0,0.55,1) infinite;
+}
+
+/* ─── Ambient glow animations ─────────────────────────────────────────────────── */
 @keyframes vicmarg-glow-breathe {
-  0%, 100% { opacity: 0.5; transform: scale(0.97); }
-  50%       { opacity: 1;   transform: scale(1.03); }
+  0%, 100% { opacity: 0.45; transform: scale(0.96); }
+  50%       { opacity: 1;   transform: scale(1.04); }
 }
 
 @keyframes vicmarg-scan-line {
   0%   { top: -2%; opacity: 0; }
-  5%   { opacity: 0.8; }
-  95%  { opacity: 0.8; }
+  5%   { opacity: 0.75; }
+  95%  { opacity: 0.75; }
   100% { top: 102%; opacity: 0; }
 }
 
-/* ─── Film grain animation ──────────────────────────────────────────────────── */
+/* ─── Film grain animation ────────────────────────────────────────────────────── */
 @keyframes vicmarg-grain-shift {
   0%   { background-position:   0px   0px; }
   10%  { background-position: -40px -60px; }
@@ -80,4 +90,35 @@
 
 .vicmarg-grain {
   animation: vicmarg-grain-shift 0.6s steps(1) infinite;
+}
+
+/* ─── Premium text shimmer (for hero labels) ─────────────────────────────────── */
+@keyframes vicmarg-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.vicmarg-shimmer-text {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.5) 0%,
+    rgba(255,255,255,0.9) 40%,
+    rgba(255,255,255,0.5) 80%,
+    rgba(255,255,255,0.5) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: vicmarg-shimmer 4s linear infinite;
+}
+
+/* ─── Gold pulse (CONVERSION scene accent) ───────────────────────────────────── */
+@keyframes vicmarg-gold-pulse {
+  0%, 100% { box-shadow: 0 0 0   0 rgba(245,158,11,0);   }
+  50%       { box-shadow: 0 0 20px 4px rgba(245,158,11,0.3); }
+}
+
+.vicmarg-gold-pulse {
+  animation: vicmarg-gold-pulse 2.5s ease-in-out infinite;
 }

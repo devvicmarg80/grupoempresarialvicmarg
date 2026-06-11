@@ -1,7 +1,8 @@
 'use client'
 
-import Link from 'next/link'
-import { useSceneStore } from '@store/scene.store'
+import Link                from 'next/link'
+import { useSceneStore }   from '@store/scene.store'
+import { VicmargLogo }     from '@components/brand/VicmargLogo'
 
 const WHATSAPP_NUMBER  = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '573332555375'
 const WHATSAPP_MESSAGE = encodeURIComponent('Hola VICMARG, me gustaría recibir más información.')
@@ -19,52 +20,46 @@ export function VicmargFooter() {
       style={{
         zIndex:     35,
         transition: 'opacity 600ms cubic-bezier(0.76, 0, 0.24, 1)',
-        opacity:    isConversion ? 1 : 0.75,
+        opacity:    isConversion ? 1 : 0.80,
       }}
     >
-      {/* Separator */}
+      {/* Separator line */}
       <div
         className="h-px"
         style={{
           background: isConversion
-            ? 'linear-gradient(90deg, transparent, rgba(245,158,11,0.45), transparent)'
+            ? 'linear-gradient(90deg, transparent, rgba(245,158,11,0.50), transparent)'
             : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)',
-          transition: 'background 600ms ease',
+          transition: 'background 700ms ease',
         }}
       />
 
       <div
         className="px-6 py-4"
         style={{
-          background:           'rgba(4,5,14,0.93)',
+          background:           isConversion
+            ? 'rgba(10,8,4,0.94)'
+            : 'rgba(4,5,14,0.93)',
           backdropFilter:       'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
+          transition:           'background 700ms ease',
         }}
       >
         <div className="max-w-5xl mx-auto flex items-start justify-between gap-8">
 
-          {/* Brand — left */}
-          <div className="flex items-center gap-2.5 shrink-0 pt-0.5">
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(37,99,235,0.25)', border: '1px solid rgba(96,165,250,0.30)' }}
-            >
-              <span className="text-blue-400 text-[9px] font-mono font-semibold">VM</span>
-            </div>
-            <div>
-              <p
-                className="text-[11px] text-white/85 leading-none"
-                style={{ fontFamily: 'var(--font-cinematic)', fontWeight: 400, letterSpacing: '0.06em' }}
-              >
-                VICMARG
-              </p>
-              <p className="text-[9px] text-white/50 font-mono uppercase tracking-[0.12em] mt-0.5">
-                Grupo Empresarial
-              </p>
-            </div>
+          {/* ── Brand — left ───────────────────────────────────────── */}
+          <div className="pointer-events-auto shrink-0">
+            <Link href="/" aria-label="VICMARG inicio">
+              <VicmargLogo
+                size="sm"
+                layout="horizontal"
+                opacity={isConversion ? 1 : 0.88}
+                glowColor={isConversion ? '#f59e0b' : '#60a5fa'}
+              />
+            </Link>
           </div>
 
-          {/* Nav — vertical, center */}
+          {/* ── Nav — vertical, center ─────────────────────────────── */}
           <nav className="pointer-events-auto flex flex-col gap-2 flex-1">
             <NavLink href="/asesoria-educativa">Asesoría Educativa</NavLink>
             <NavLink href="/asesoria-empresarial">Asesoría Empresarial</NavLink>
@@ -80,12 +75,17 @@ export function VicmargFooter() {
             </a>
           </nav>
 
-          {/* Copyright — right */}
-          <p className="text-[9px] text-white/35 font-mono tracking-wide hidden sm:block shrink-0 pt-0.5 text-right leading-relaxed">
-            © {YEAR} VICMARG<br />
-            Todos los derechos<br />
-            reservados.
-          </p>
+          {/* ── Copyright — right ──────────────────────────────────── */}
+          <div className="hidden sm:flex flex-col items-end gap-1 shrink-0 pt-0.5">
+            <p
+              className="text-[9px] font-mono tracking-wide text-right leading-relaxed"
+              style={{ color: isConversion ? 'rgba(245,158,11,0.45)' : 'rgba(255,255,255,0.28)' }}
+            >
+              © {YEAR} VICMARG<br />
+              Todos los derechos<br />
+              reservados.
+            </p>
+          </div>
 
         </div>
       </div>
@@ -98,9 +98,9 @@ function NavLink({
   children,
   dim,
 }: {
-  href: string
-  children: React.ReactNode
-  dim?: boolean
+  href:      string
+  children:  React.ReactNode
+  dim?:      boolean
 }) {
   return (
     <Link
