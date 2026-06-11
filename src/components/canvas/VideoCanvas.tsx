@@ -175,7 +175,7 @@ export function VideoCanvas() {
             />
 
             {/* Logo mark */}
-            <VicmargLogo size="lg" layout="vertical" subLabel="Grupo Empresarial" />
+            <VicmargLogo size="xl" layout="mark" />
 
             <div
               className="h-px mt-4"
