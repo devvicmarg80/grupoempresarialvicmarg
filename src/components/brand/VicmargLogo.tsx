@@ -34,14 +34,14 @@ export function VicmargLogo({
   const mark = (
     <div
       className="shrink-0 relative"
-      style={{ width: w, height: h, opacity }}
+      style={{ width: w, height: h, opacity, mixBlendMode: 'screen' }}
     >
       <Image
         src="/images/logo.png"
         alt="VICMARG"
         width={w}
         height={h}
-        style={{ objectFit: 'contain', mixBlendMode: 'screen' }}
+        style={{ objectFit: 'contain' }}
         priority={size === 'lg' || size === 'xl' || size === 'hero'}
       />
     </div>

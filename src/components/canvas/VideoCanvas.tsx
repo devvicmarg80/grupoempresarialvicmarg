@@ -99,7 +99,7 @@ export function VideoCanvas() {
       {/* ── Video layer — fixed, full-screen ─────────────────────────── */}
       <div
         className="fixed inset-0"
-        style={{ zIndex: 10, backgroundColor: '#050508' }}
+        style={{ zIndex: 10 }}
         aria-hidden="true"
       >
         {SCENE_SEQUENCE.map((sceneId) => {
