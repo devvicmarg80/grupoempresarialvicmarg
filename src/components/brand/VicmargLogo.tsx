@@ -41,7 +41,7 @@ export function VicmargLogo({
         alt="VICMARG"
         width={w}
         height={h}
-        style={{ objectFit: 'contain' }}
+        style={{ objectFit: 'contain', mixBlendMode: 'screen' }}
         priority={size === 'lg' || size === 'xl' || size === 'hero'}
       />
     </div>
