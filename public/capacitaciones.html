@@ -251,7 +251,11 @@ img{display:block;max-width:100%}
 }
 .btn-wompi:active{transform:translateY(0) scale(.98)}
 .btn-wompi svg{width:14px;height:14px;flex-shrink:0;opacity:.7}
-.wompi-logo{font-size:11.5px;font-weight:800;color:var(--gold);letter-spacing:.08em}
+.wompi-logo{display:none}
+.wompi-img-link{display:inline-flex;align-items:center;opacity:.75;transition:opacity .2s}
+.wompi-img-link:hover{opacity:1}
+.wompi-img{height:16px;width:auto;display:block}
+.wompi-img-note{height:18px;vertical-align:middle;margin:0 4px}
 
 .cards-row2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:20px}
 .free-banner{
@@ -698,7 +702,7 @@ footer{background:rgba(3,8,16,.97);border-top:1px solid var(--div);padding:40px 
           </button>
           <button class="btn-wompi" onclick="window.open('#wompi-liderazgo','_blank')">
             <svg viewBox="0 0 16 16" width="14" height="14"><rect x="1" y="4" width="14" height="9" rx="1.5" style="fill:none;stroke:rgba(196,154,60,.7);stroke-width:1.3"/><line x1="1" y1="7.5" x2="15" y2="7.5" style="stroke:rgba(196,154,60,.7);stroke-width:1.3"/><rect x="3" y="9.5" width="3" height="1.5" rx=".5" style="fill:rgba(196,154,60,.6)"/></svg>
-            <span>Pagar en línea</span><span class="wompi-logo">WOMPI</span>
+            <span>Pagar en línea</span><a href="https://wompi.com/es/co" target="_blank" rel="noopener noreferrer" class="wompi-img-link" onclick="event.stopPropagation()"><img src="/images/wompi-logo-white.svg" alt="Wompi" class="wompi-img"></a>
           </button>
         </div>
       </div>
@@ -725,7 +729,7 @@ footer{background:rgba(3,8,16,.97);border-top:1px solid var(--div);padding:40px 
           </button>
           <button class="btn-wompi" onclick="window.open('#wompi-finanzas','_blank')">
             <svg viewBox="0 0 16 16" width="14" height="14"><rect x="1" y="4" width="14" height="9" rx="1.5" style="fill:none;stroke:rgba(196,154,60,.7);stroke-width:1.3"/><line x1="1" y1="7.5" x2="15" y2="7.5" style="stroke:rgba(196,154,60,.7);stroke-width:1.3"/><rect x="3" y="9.5" width="3" height="1.5" rx=".5" style="fill:rgba(196,154,60,.6)"/></svg>
-            <span>Pagar en línea</span><span class="wompi-logo">WOMPI</span>
+            <span>Pagar en línea</span><a href="https://wompi.com/es/co" target="_blank" rel="noopener noreferrer" class="wompi-img-link" onclick="event.stopPropagation()"><img src="/images/wompi-logo-white.svg" alt="Wompi" class="wompi-img"></a>
           </button>
         </div>
       </div>
@@ -752,7 +756,7 @@ footer{background:rgba(3,8,16,.97);border-top:1px solid var(--div);padding:40px 
           </button>
           <button class="btn-wompi" onclick="window.open('#wompi-ia','_blank')">
             <svg viewBox="0 0 16 16" width="14" height="14"><rect x="1" y="4" width="14" height="9" rx="1.5" style="fill:none;stroke:rgba(196,154,60,.7);stroke-width:1.3"/><line x1="1" y1="7.5" x2="15" y2="7.5" style="stroke:rgba(196,154,60,.7);stroke-width:1.3"/><rect x="3" y="9.5" width="3" height="1.5" rx=".5" style="fill:rgba(196,154,60,.6)"/></svg>
-            <span>Pagar en línea</span><span class="wompi-logo">WOMPI</span>
+            <span>Pagar en línea</span><a href="https://wompi.com/es/co" target="_blank" rel="noopener noreferrer" class="wompi-img-link" onclick="event.stopPropagation()"><img src="/images/wompi-logo-white.svg" alt="Wompi" class="wompi-img"></a>
           </button>
         </div>
       </div>
@@ -780,7 +784,7 @@ footer{background:rgba(3,8,16,.97);border-top:1px solid var(--div);padding:40px 
           </button>
           <button class="btn-wompi" style="flex:1" onclick="window.open('#wompi-habilidades','_blank')">
             <svg viewBox="0 0 16 16" width="13" height="13"><rect x="1" y="4" width="14" height="9" rx="1.5" style="fill:none;stroke:rgba(196,154,60,.7);stroke-width:1.3"/><line x1="1" y1="7.5" x2="15" y2="7.5" style="stroke:rgba(196,154,60,.7);stroke-width:1.3"/><rect x="3" y="9.5" width="3" height="1.5" rx=".5" style="fill:rgba(196,154,60,.6)"/></svg>
-            <span class="wompi-logo">WOMPI</span>
+            <span>Pagar en línea</span><a href="https://wompi.com/es/co" target="_blank" rel="noopener noreferrer" class="wompi-img-link" onclick="event.stopPropagation()"><img src="/images/wompi-logo-white.svg" alt="Wompi" class="wompi-img"></a>
           </button>
         </div>
       </div>
@@ -806,8 +810,9 @@ footer{background:rgba(3,8,16,.97);border-top:1px solid var(--div);padding:40px 
     </div>
 
     <p class="wompi-note">
-      Pagos seguros procesados por <strong style="color:var(--gold)">WOMPI</strong> ·
-      Tarjetas crédito/débito · PSE · Nequi ·
+      Pagos seguros procesados por
+      <a href="https://wompi.com/es/co" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;vertical-align:middle;opacity:.9"><img src="/images/wompi-logo-white.svg" alt="Wompi" class="wompi-img-note"></a>
+      · Tarjetas crédito/débito · PSE · Nequi ·
       <button onclick="openModal('Consulta de pago')" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:inherit;text-decoration:underline">¿Prefieres coordinar el pago?</button>
     </p>
   </div>
