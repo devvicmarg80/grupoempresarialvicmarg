@@ -420,6 +420,33 @@ footer{background:rgba(3,8,16,.97);border-top:1px solid var(--div);padding:40px 
 /* ══ UX / UI FEATURES ══ */
 
 /* 1 — Scroll progress bar */
+/* ── Wompi Float ── */
+.wom-float{
+  position:fixed;bottom:170px;right:22px;z-index:9990;
+  display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+}
+.wom-btn{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,#5B4FE9,#7B6FF5);
+  box-shadow:0 4px 18px rgba(91,79,233,.45);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border:none;transition:transform .2s,box-shadow .2s;
+  text-decoration:none;
+}
+.wom-btn:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(91,79,233,.65)}
+.wom-btn img{width:28px;height:auto;filter:brightness(0) invert(1)}
+.wom-tooltip{
+  background:rgba(10,22,44,.95);border:1px solid rgba(91,79,233,.3);
+  color:var(--t1);font-size:13px;line-height:1.45;
+  padding:12px 15px;border-radius:12px;max-width:220px;text-align:left;
+  opacity:0;transform:translateX(10px) scale(.95);pointer-events:none;
+  transition:opacity .25s,transform .25s;
+  backdrop-filter:blur(8px);
+}
+.wom-tooltip strong{color:#7B6FF5;display:block;margin-bottom:4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.wom-float:hover .wom-tooltip{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}
+@media(max-width:640px){.wom-float{bottom:156px;right:14px}.wom-btn{width:50px;height:50px}.wom-btn img{width:24px}}
+
 /* ── WhatsApp Float ── */
 .wa-float{
   position:fixed;bottom:100px;right:22px;z-index:9990;
@@ -629,6 +656,19 @@ footer{background:rgba(3,8,16,.97);border-top:1px solid var(--div);padding:40px 
 
 <!-- SCROLL PROGRESS -->
 <div class="scroll-prog" id="scrollProg"></div>
+
+<!-- WOMPI FLOAT -->
+<div class="wom-float">
+  <div class="wom-tooltip">
+    <strong>💳 ¿Qué es Wompi?</strong>
+    Wompi es la pasarela de pagos de Bancolombia. Paga con tarjeta, PSE o Nequi de forma 100% segura y sin complicaciones.
+  </div>
+  <a class="wom-btn"
+     href="https://wompi.com/es/co/que-es-wompi?utm_source=google&utm_medium=cpc&utm_campaign=BANCOLOMBIA_AT_PGD_AON_CONS_TRAFICO_CPC_GG-SEM-PDB_WOMPI_MDO00885"
+     target="_blank" rel="noopener noreferrer" aria-label="¿Qué es Wompi?">
+    <img src="/images/wompi-logo-white.svg" alt="Wompi">
+  </a>
+</div>
 
 <!-- WHATSAPP FLOAT -->
 <div class="wa-float" id="waFloat">
